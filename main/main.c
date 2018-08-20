@@ -21,7 +21,7 @@
 #include "driver/uart.h"
 #include "rom/uart.h"
 #include "flash/flash_setup.h"
-#include "sd_card/sd_card.h"
+#include "sd_card.h"
 
 #include "configuration.h"
 
@@ -30,31 +30,31 @@
 #endif
 
 #if _ENABLE_WATCHDOG_
-#include "watchdog/watchdog.h"
+#include "watchdog.h"
 
 #endif
 
 #if _ENABLE_HEART_BEAT_
 
-#include "gpio/gpio.h"
+#include "gpio.h"
 
 #endif
 
 #if _ENABLE_WIFI_
-#include "wifi/wifi_station_setup.h"
+#include "wifi_station_setup.h"
 #endif
 #include "flash/configuration_data.h"
 
-#define TAG "OLIMEX"
+#include "internal_temp.h"
 
-
-
+#include "cmp.h"
 
 
 
                                 
 void app_main(void)
 {
+
    flash_initialize_flash();
 #if _ENABLE_HEART_BEAT_ 
     int heartbeat_toggle;
@@ -97,6 +97,7 @@ void app_main(void)
        gpio_set_value(HEART_BEAT,heartbeat_toggle);
 #endif    
       wdt_reset_task_time();   
+      printf( "temperature %d \n",( temprature_sens_read() -32)*9/5);
       vTaskDelay(1000 / portTICK_PERIOD_MS);
         
        

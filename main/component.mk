@@ -9,4 +9,4 @@
 
 # COMPONENT_SRCDIRS := . can ir uart i2c sd spi ethernet
 #COMPONENT_SRCDIRS := . ethernet sd ir can gpio wifi
-COMPONENT_SRCDIRS := . ethernet gpio wifi  watchdog mosquitto bluetooth flash sd_card
+COMPONENT_SRCDIRS := . ethernet gpio wifi  watchdog mosquitto bluetooth flash sd_card sensors application msgpack

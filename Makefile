@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := sd_card
+PROJECT_NAME := lan_gpio
 
 include $(IDF_PATH)/make/project.mk
 
