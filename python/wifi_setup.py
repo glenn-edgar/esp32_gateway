@@ -3,7 +3,7 @@ import sys
 import msgpack
 
 prefix = "D:\\"
-postfix = ".msg"
+postfix = ".mpk"
 #get command  filename  ssid password hostname
 
 assert len(sys.argv) == 5,"script requires 4 args filename ssid password hostname "
@@ -21,6 +21,6 @@ access_dict["hostname"] = hostname
 
 packed_object = msgpack.packb(access_dict, use_bin_type=True)
 
-f= open(filename,"w+")
+f= open(filename,"wb")
 f.write(packed_object)
 f.close() 

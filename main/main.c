@@ -47,7 +47,7 @@
 
 #include "internal_temp.h"
 
-#include "cmp.h"
+#include "spiffs_setup.h"
 
 
 
@@ -55,13 +55,28 @@
 void app_main(void)
 {
 
-   flash_initialize_flash();
+   
 #if _ENABLE_HEART_BEAT_ 
     int heartbeat_toggle;
     
 #endif
     
     printf("-------REBOOT------------\n");
+    
+    if( initialize_spiffs() == false )
+    {
+      // bad flash cannot go further
+      esp_restart();    
+        
+    }
+#if _ENABLE_SD_CARD_
+    initialize_sd_card();
+    //test_file_system();
+   
+   
+
+#endif
+    flash_initialize_flash();
 #if _ENABLE_ETHERNET_ 
     initEthernet(config_get_lan_host_name());
 #endif
@@ -70,13 +85,7 @@ void app_main(void)
     wifi_init_sta(config_get_wifi_host_name(),config_get_ssid(),config_get_password());
 #endif
 
-#if _ENABLE_SD_CARD_
-   initialize_sd_card();
-   test_file_system();
-   
-   
 
-#endif
 
 #if _ENABLE_WATCHDOG_ 
     printf("current task handle %p\n",xTaskGetCurrentTaskHandle());
@@ -104,3 +113,4 @@ void app_main(void)
         
     }
 }
+

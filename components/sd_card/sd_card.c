@@ -8,7 +8,14 @@
 #include "driver/sdmmc_host.h"
 #include "driver/sdspi_host.h"
 #include "sdmmc_cmd.h"
-#include "../configuration.h"
+
+static bool sd_card_mounted;
+
+bool is_sd_card_mounted(void )
+{
+    return sd_card_mounted;
+    
+}
 
 #define TAG "OLIMEX"
 // This example can use SDMMC and SPI peripherals to communicate with SD card.
@@ -33,8 +40,16 @@
 
 sdmmc_card_t* card;
 
-void initialize_sd_card(void)
+char *sd_get_prefix(void)
 {
+    return "/sdcard/";
+    
+}
+
+
+bool initialize_sd_card(void)
+{
+    bool return_value;
     printf( "Initializing SD card \n");
 
 #ifndef USE_SPI_MODE
@@ -85,20 +100,25 @@ void initialize_sd_card(void)
     // production applications.
     
     esp_err_t ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
-
+    sd_card_mounted = true;
+    return_value = true;
     if (ret != ESP_OK) {
+        sd_card_mounted = false;
+        return_value = false;
         if (ret == ESP_FAIL) {
             printf( "Failed to mount filesystem. \n"
                 "If you want the card to be formatted, set format_if_mount_failed = true.\n");
         } else {
+            
             printf( "Failed to initialize the card (%s). \n"
                 "Make sure SD card lines have pull-up resistors in place.\n", esp_err_to_name(ret));
         }
-        return;
+        return false;
     }
 
     // Card has been initialized, print its properties
     sdmmc_card_print_info(stdout, card);
+    return return_value;
 
 
 }
