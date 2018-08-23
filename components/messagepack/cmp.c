@@ -1704,6 +1704,10 @@ bool cmp_read_str_size(cmp_ctx_t *ctx, uint32_t *size) {
     case CMP_TYPE_STR8:
     case CMP_TYPE_STR16:
     case CMP_TYPE_STR32:
+    case  CMP_TYPE_BIN8:            
+    case CMP_TYPE_BIN16:           
+    case CMP_TYPE_BIN32:           
+
       *size = obj.as.str_size;
       return true;
     default:
@@ -1725,9 +1729,14 @@ bool cmp_read_str_ptr(cmp_ctx_t *ctx, char **data, uint32_t *size)
     case CMP_TYPE_STR8:
     case CMP_TYPE_STR16:
     case CMP_TYPE_STR32:
+    case  CMP_TYPE_BIN8:            
+    case CMP_TYPE_BIN16:           
+    case CMP_TYPE_BIN32:           
+
       *size = obj.as.str_size;
       break;
     default:
+      printf("bad object %d \n",obj.type);
       ctx->error = INVALID_TYPE_ERROR;
       return false;
   }
@@ -1749,18 +1758,18 @@ bool cmp_read_str(cmp_ctx_t *ctx, char *data, uint32_t *size) {
 
   if (!cmp_read_str_size(ctx, &str_size))
     return false;
-
+  //printf("string size is %d \n",str_size);
   if ((str_size + 1) > *size) {
     *size = str_size;
     ctx->error = STR_DATA_LENGTH_TOO_LONG_ERROR;
     return false;
   }
-
+  //printf("made it here \n");
   if (!ctx->read(ctx, data, str_size)) {
     ctx->error = DATA_READING_ERROR;
     return false;
   }
-
+  //printf("made it here 444\n");
   data[str_size] = 0;
 
   *size = str_size;
@@ -2786,7 +2795,6 @@ bool cmp_object_as_str(cmp_object_t *obj, uint32_t *size) {
     case CMP_TYPE_FIXSTR:
     case CMP_TYPE_STR8:
     case CMP_TYPE_STR16:
-    case CMP_TYPE_STR32:
       *size = obj->as.str_size;
       return true;
     default:

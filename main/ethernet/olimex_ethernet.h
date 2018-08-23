@@ -20,6 +20,6 @@
 #ifndef _OLIMEX_ETHERNET_H_
 #define ETHERNET_TAG "OLIMEX-ETHERNET"
 
-void initEthernet(char *host_name);
+void initEthernet(void);
 
 #endif

@@ -11,8 +11,15 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "msg_file_dict.h"
+
 static esp_err_t event_handler(void *ctx, system_event_t *event);
 
+#define NAME_SIZE 32
+
+char ssid[NAME_SIZE];
+char password[NAME_SIZE];
+char hostname[NAME_SIZE];
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t wifi_event_group;
 
@@ -60,8 +67,13 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 
 
 
-void wifi_init_sta(char *hostname, char *ssid, char *password)
+void wifi_init_sta(void)
 {
+    msgpack_load_buffer("WIFI.MPK");
+    msgpack_find_field( "ssid", ssid, sizeof(ssid) );
+    msgpack_find_field( "hostname", hostname, sizeof(hostname) );
+    msgpack_find_field( "password", password, sizeof(hostname) );
+    msgpack_close_buffer();
     wifi_event_group = xEventGroupCreate();
     strcpy((char*)wifi_config.sta.ssid, ssid );
     strcpy((char*)wifi_config.sta.password,password);

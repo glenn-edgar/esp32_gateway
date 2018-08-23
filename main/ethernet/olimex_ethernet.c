@@ -42,7 +42,7 @@
 #include "tcpip_adapter.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
-
+#include "msg_file_dict.h"
 
 // #include "eth_phy/phy_lan8720.h"
 #include "olimex_lan8710.h"
@@ -50,6 +50,9 @@
 
 #define PIN_SMI_MDC   23
 #define PIN_SMI_MDIO  18
+
+char hostname[32];
+
 
 #define CHECK_ERROR_CODE(returned, expected) ({                        \
             if(returned != expected){                                  \
@@ -72,9 +75,13 @@ static void eth_gpio_config_rmii(void)
     phy_rmii_smi_configure_pins(PIN_SMI_MDC, PIN_SMI_MDIO);
 }
 
-void initEthernet(char *host_name)
+void initEthernet(void)
 {
     printf("Initialize ETHERNET\n"); 
+    msgpack_load_buffer("WIFI.MPK");
+    msgpack_find_field( "hostname", hostname, sizeof(hostname) );
+    msgpack_close_buffer();
+
     eth_config_t config = phy_lan8710_default_ethernet_config;
   
 
@@ -94,6 +101,6 @@ void initEthernet(char *host_name)
     /* Enable ethernet */
     
     CHECK_ERROR_CODE(esp_eth_enable(), ESP_OK);
-    tcpip_adapter_set_hostname(ESP_IF_ETH, host_name);
+    tcpip_adapter_set_hostname(ESP_IF_ETH, hostname);
 
 }

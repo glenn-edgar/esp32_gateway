@@ -15,9 +15,15 @@
 #include "../spiffs_setup.h"
 #include <dirent.h>
 
+
+#define BUFFER_SIZE  1024
+#define FILE_NAME_SIZE 1024
 static void transfer_files(void);
 static void transfer_file(char *filename);
 static bool match_extension(char *filename);
+
+
+
 void flash_initialize_flash(void )
 {
     //Initialize NVS
@@ -35,7 +41,7 @@ void flash_initialize_flash(void )
         
         
     }        
-    // load specific files
+    
     
     
     
@@ -70,8 +76,12 @@ static bool match_extension(char *filename)
     int length;
     char *pointer;
     length = strlen(filename);
-    pointer = filename+length-3;
-    if( strcmp(pointer,"MPK") == 0 )
+    if(length <= 4)
+    {
+        return false;
+    }
+    pointer = filename+length-4;
+    if( strcmp(pointer,".MPK") == 0 )
     {
         return true;
     }
@@ -89,9 +99,9 @@ static void transfer_file(char *filename)
     int nread;
     int nwrite;
     
-    buffer = (char *)malloc(1024);
-    sd_file_name = (char *)malloc(32);
-    spiffs_name = (char *)malloc(32);
+    buffer = (char *)malloc(BUFFER_SIZE);
+    sd_file_name = (char *)malloc(FILE_NAME_SIZE);
+    spiffs_name = (char *)malloc(FILE_NAME_SIZE);
     
     strcpy(sd_file_name, sd_get_prefix());
     strcat( sd_file_name, filename);
@@ -105,7 +115,7 @@ static void transfer_file(char *filename)
     printf("spiffs_name %s \n",spiffs_name);
     
     
-    nread = fread(buffer,1,1024,from_fp);
+    nread = fread(buffer,1,BUFFER_SIZE,from_fp);
     nwrite = 0;
     if( nread > 0)
     {
@@ -127,10 +137,3 @@ static void transfer_file(char *filename)
     
     
     
-#if 0
-
-fd_from = fopen(from, "rb")
-fread(buf, 1, sizeof(buf), fd_from), nread > 0)
- nwritten = fwrite(out_ptr, 1, nread, fd_to);
- fclose(fd_to) 
-#endif  

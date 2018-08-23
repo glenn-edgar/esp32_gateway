@@ -78,11 +78,11 @@ void app_main(void)
 #endif
     flash_initialize_flash();
 #if _ENABLE_ETHERNET_ 
-    initEthernet(config_get_lan_host_name());
+    initEthernet();
 #endif
 
 #if _ENABLE_WIFI_
-    wifi_init_sta(config_get_wifi_host_name(),config_get_ssid(),config_get_password());
+    wifi_init_sta();
 #endif
 
 
