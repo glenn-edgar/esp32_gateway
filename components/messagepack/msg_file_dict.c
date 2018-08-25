@@ -85,7 +85,7 @@ char * cmp_skip_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_rea
 }
 
 
-void msgpack_load_buffer(char *filename)
+bool msgpack_load_buffer(char *filename)
 {
     
     char *msg_pack_file_name;
@@ -101,14 +101,17 @@ void msgpack_load_buffer(char *filename)
     if(msg_pack_handle == NULL)
     {
         
-        abort();
+        return false;
        
     }
     buffer = malloc(BUFFER_SIZE);
     buffer_size = fread(buffer,1,BUFFER_SIZE,msg_pack_handle);
-    
+    if(buffer == NULL )
+    {
+      return false;
+    }
     printf("buffer_size %d \n",buffer_size);
-    
+    return true;
     
 }
 
@@ -117,17 +120,17 @@ bool msgpack_find_field( char *field, char *result, int max_size )
     cmp_ctx_t cmp;
     unsigned map_size;
     unsigned i;
-    bool return_value;
+    
     
     unsigned string_size;
     
     
-    return_value = false;   
+     
     reset_buffer();
     cmp_init( &cmp, buffer, cmp_reader_function, cmp_skip_function, cmp_writer_function);
     if( cmp_read_map(&cmp, &map_size ) == false )
     {
-        abort();
+        return false;
     }
     
     for( i = 0; i < map_size; i++)
@@ -135,7 +138,7 @@ bool msgpack_find_field( char *field, char *result, int max_size )
         string_size = max_size;
         if(cmp_read_str(&cmp, result, &string_size) == false)
         {
-            abort();
+            return false;
         }
 
         
@@ -144,7 +147,7 @@ bool msgpack_find_field( char *field, char *result, int max_size )
            string_size = max_size;
            if(cmp_read_str(&cmp, result, &string_size) == false)
            {
-              abort();
+              return false;
            }
           
                 
@@ -157,14 +160,15 @@ bool msgpack_find_field( char *field, char *result, int max_size )
            string_size = max_size;
            if(cmp_read_str(&cmp, result, &string_size) == false)
            {
-              abort();
+              return false;
            }
  
         }
 
    }
-   abort(); // did not find any results     
-   return return_value ; 
+  
+   return false; // did not find any results     
+   
         
         
    

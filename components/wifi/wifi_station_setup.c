@@ -10,7 +10,7 @@
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
+#include "wifi_station_setup.h"
 #include "msg_file_dict.h"
 
 static esp_err_t event_handler(void *ctx, system_event_t *event);
@@ -31,6 +31,13 @@ const int WIFI_CONNECTED_BIT = BIT0;
 wifi_config_t wifi_config;
 
 #define TAG "WIFI_STATION_SETUP"
+
+static bool wifi_setup_status =false;
+
+bool wifi_get_wifi_setup_status(void)
+{
+    return wifi_setup_status;
+}
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -66,13 +73,34 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 
 
 
-
 void wifi_init_sta(void)
 {
-    msgpack_load_buffer("WIFI.MPK");
-    msgpack_find_field( "ssid", ssid, sizeof(ssid) );
-    msgpack_find_field( "hostname", hostname, sizeof(hostname) );
-    msgpack_find_field( "password", password, sizeof(hostname) );
+    bool ret;
+    wifi_setup_status = false;
+    ret = msgpack_load_buffer("WIFI.MPK");
+    if(ret == false)
+    {
+        return ;
+    }
+    ret = msgpack_find_field( "ssid", ssid, sizeof(ssid) );
+    if(ret == false)
+    {
+        msgpack_close_buffer();
+        return;
+    }
+
+    ret = msgpack_find_field( "hostname", hostname, sizeof(hostname) );
+    if( ret == false )
+    {
+        msgpack_close_buffer();
+        return;
+    }
+    ret = msgpack_find_field( "password", password, sizeof(hostname) );
+    if( ret == false)
+    {
+        msgpack_close_buffer();
+        return;
+    }
     msgpack_close_buffer();
     wifi_event_group = xEventGroupCreate();
     strcpy((char*)wifi_config.sta.ssid, ssid );
@@ -89,7 +117,7 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_wifi_start() );
     ESP_ERROR_CHECK( tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname ) );
     ESP_LOGI(TAG, "wifi_init_sta finished.");
-    
+    wifi_setup_status = true;
 }
 
 

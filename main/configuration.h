@@ -7,7 +7,7 @@ This file has defines which enable/disable subsystems
 #ifndef _CONFIGRUATION_H_
 #define _CONFIGRUATION_H_ 
 
-#define _ENABLE_SD_CARD_ 1
+#define _ENABLE_SD_CARD_ 0
 #define _ENABLE_FLASH_ 0
 #define _ENABLE_HEART_BEAT_ 1
 #define _ENABLE_MOSQUITTO_ 0
