@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 #ifndef CMP_H__
 #define CMP_H__
-
+#include <esp_types.h>
 struct cmp_ctx_s;
 
 typedef bool   (*cmp_reader)(struct cmp_ctx_s *ctx, void *data, size_t limit);

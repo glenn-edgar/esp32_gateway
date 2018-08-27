@@ -38,7 +38,7 @@ static void reset_buffer(void)
 
 //typedef bool   (*cmp_reader)(struct cmp_ctx_s *ctx, void *data, size_t limit);
 
-bool cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
+static bool cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
 {
     char *return_buffer;
     int i;
@@ -59,7 +59,7 @@ bool cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_rea
 }
 
 //typedef size_t (*cmp_writer)(struct cmp_ctx_s *ctx, const void *data,size_t count);
-size_t cmp_writer_function(struct cmp_ctx_s *ctx, const void *data, size_t count )
+static size_t cmp_writer_function(struct cmp_ctx_s *ctx, const void *data, size_t count )
 {
     abort(); // no write actions allowed
     
@@ -68,7 +68,7 @@ size_t cmp_writer_function(struct cmp_ctx_s *ctx, const void *data, size_t count
 
 
 //typedef char * (*cmp_skip)(struct cmp_ctx_s *ctx,  void *data,size_t count);
-char * cmp_skip_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
+static char * cmp_skip_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
 {
 
     

@@ -17,6 +17,7 @@
 #include "esp_task_wdt.h"
 #include "esp_eth.h"
 #include "esp_log.h"
+#include <freertos/task.h>
 
 #include "driver/uart.h"
 #include "rom/uart.h"
@@ -48,6 +49,7 @@
 #include "internal_temp.h"
 
 #include "spiffs_setup.h"
+#include "console_output_server.h"
 
 
 
@@ -55,7 +57,7 @@
 void app_main(void)
 {
 
-   
+   console_output_server();
 #if _ENABLE_HEART_BEAT_ 
     int heartbeat_toggle;
     
@@ -101,14 +103,20 @@ void app_main(void)
     while(1)
     {
 
-
-
+      MSG_PACK_ELEMENT msg_pack[3];
+#if 0
+      printf("high water stack mark %d \n",uxTaskGetStackHighWaterMark( NULL ));
+      printf("heap space %d \n",esp_get_free_heap_size());
+#endif
 #if _ENABLE_HEART_BEAT_      
        heartbeat_toggle = (heartbeat_toggle^0xffff)&0x0001;
        gpio_set_value(HEART_BEAT,heartbeat_toggle);
 #endif    
-      wdt_reset_task_time();   
-      printf( "temperature %d \n",( temprature_sens_read() -32)*9/5);
+      wdt_reset_task_time();
+      msg_dict_pack_string(&msg_pack[0],"TOPIC","HEART_BEAT");      
+      msg_dict_pack_float(&msg_pack[1],"CHIP_TEMP", ( temprature_sens_read() -32)*9/5);
+      msg_dict_pack_unsigned_integer(&msg_pack[2],"FREE_HEAP",esp_get_free_heap_size());
+      console_output_structured_data(2, msg_pack);
       vTaskDelay(1000 / portTICK_PERIOD_MS);
         
        
