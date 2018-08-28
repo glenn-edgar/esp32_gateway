@@ -9,7 +9,7 @@
 #include "console_output_server.h"
 #include "base64.h"
 #include "console_output_server.h"
-
+#include "hexadecimal.h"
 
 SemaphoreHandle_t xSemaphore = NULL;
 
@@ -46,17 +46,16 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     char *pack_buffer;
     int   pack_buffer_size;
     char *master_buffer;
-    char *current_pointer;
+    //char *current_pointer;
     
     pack_buffer = msg_dict_stream( &pack_buffer_size,number,msg_pack);
-    master_buffer = malloc(pack_buffer_size*4/3+50);
-    
+    master_buffer = malloc(pack_buffer_size*2+50);
+    memset(master_buffer,0,pack_buffer_size*2+50);
     strcpy(master_buffer,"BASE64:");
-    current_pointer = master_buffer+strlen("BASE64:");
+    printf("pack buffer size %d \n",pack_buffer_size);
+    binary_to_hex(pack_buffer,pack_buffer_size, master_buffer+strlen("BASE64:"));
+    strcat(master_buffer,":END");
     
-    current_pointer += b64_encode((unsigned int *)pack_buffer, pack_buffer_size, (unsigned char *)current_pointer);
-    strcpy(current_pointer,":END");
-    free(pack_buffer);
  
  
     if( xSemaphoreTake( xSemaphore, ( TickType_t ) 10 ) == true )
@@ -69,6 +68,7 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     {
         return_value = false;
     }
+    free(pack_buffer);
     free(master_buffer);
     
     return return_value;
@@ -76,3 +76,4 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     
     
 }
+

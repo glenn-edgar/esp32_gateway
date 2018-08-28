@@ -10,6 +10,7 @@ static char *current_buffer = NULL;
 static int buffer_size = 0;
 static char *buffer;
 
+static void add_zero(void);
 static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack );
 
 static bool reader(struct cmp_ctx_s *ctx, void *data, size_t number_to_read );
@@ -24,7 +25,7 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
   cmp_ctx_t ctx;
   
   allocate_buffer( number, msg_pack );
-  *buff_size = buffer_size;
+  
   cmp_init(&ctx, buffer,reader, skipper, writer);    
   cmp_write_map(&ctx,number);
   for(int i=0; i<number;i++)
@@ -66,7 +67,8 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
     
            
   }
-  
+  add_zero();
+  *buff_size = (current_buffer-buffer);
   return buffer;
 }  
     
@@ -137,7 +139,7 @@ static size_t writer(struct cmp_ctx_s *ctx, const void *data, size_t count )
     }
     memcpy(current_buffer,data,count);
     current_buffer += count;
-    
+    printf("count %d \n",count);
     return count;
     
 }
@@ -151,4 +153,8 @@ static char * skipper(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
     
     abort(); // should not happen
     
+}
+static void add_zero(void)
+{
+    *current_buffer = 0;
 }
