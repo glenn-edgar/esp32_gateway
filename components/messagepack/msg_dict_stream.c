@@ -139,7 +139,7 @@ static size_t writer(struct cmp_ctx_s *ctx, const void *data, size_t count )
     }
     memcpy(current_buffer,data,count);
     current_buffer += count;
-    printf("count %d \n",count);
+    
     return count;
     
 }

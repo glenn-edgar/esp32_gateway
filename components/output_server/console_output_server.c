@@ -7,8 +7,8 @@
 #include "freertos/semphr.h"
 
 #include "console_output_server.h"
-#include "base64.h"
-#include "console_output_server.h"
+
+
 #include "hexadecimal.h"
 
 SemaphoreHandle_t xSemaphore = NULL;
@@ -52,7 +52,7 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     master_buffer = malloc(pack_buffer_size*2+50);
     memset(master_buffer,0,pack_buffer_size*2+50);
     strcpy(master_buffer,"BASE64:");
-    printf("pack buffer size %d \n",pack_buffer_size);
+    
     binary_to_hex(pack_buffer,pack_buffer_size, master_buffer+strlen("BASE64:"));
     strcat(master_buffer,":END");
     

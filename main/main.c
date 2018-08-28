@@ -116,7 +116,7 @@ void app_main(void)
       msg_dict_pack_string(&msg_pack[0],"TOPIC","HEART_BEAT");      
       msg_dict_pack_float(&msg_pack[1],"CHIP_TEMP", ( temprature_sens_read() -32)*9/5);
       msg_dict_pack_unsigned_integer(&msg_pack[2],"FREE_HEAP",esp_get_free_heap_size());
-      console_output_structured_data(2, msg_pack);
+      console_output_structured_data(3, msg_pack);
       vTaskDelay(1000 / portTICK_PERIOD_MS);
         
        
