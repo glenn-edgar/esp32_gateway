@@ -24,6 +24,7 @@
 #include "flash/flash_setup.h"
 #include "sd_card.h"
 
+
 #include "configuration.h"
 
 #if _ENABLE_ETHERNET_ 
@@ -50,14 +51,14 @@
 
 #include "spiffs_setup.h"
 #include "console_output_server.h"
-
+#include "console_input_server.h"
 
 
                                 
 void app_main(void)
 {
 
-   console_output_server();
+
 #if _ENABLE_HEART_BEAT_ 
     int heartbeat_toggle;
     
@@ -79,6 +80,8 @@ void app_main(void)
 
 #endif
     flash_initialize_flash();
+    console_output_server();
+   initialize_console_input_server();
 #if _ENABLE_ETHERNET_ 
     initEthernet();
 #endif
