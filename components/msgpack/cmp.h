@@ -283,11 +283,12 @@ bool cmp_read_bin_size(cmp_ctx_t *ctx, uint32_t *size);
 
 bool cmp_read_str(cmp_ctx_t *ctx, char *data, uint32_t *size);
 
-// function added by glenn edga
-bool cmp_read_str_ptr(cmp_ctx_t *ctx, char **data, uint32_t *size);
+
 
 /* Reads packed binary data from the backend */
 bool cmp_read_bin(cmp_ctx_t *ctx, void *data, uint32_t *size);
+
+
 
 /* Reads an array from the backend */
 bool cmp_read_array(cmp_ctx_t *ctx, uint32_t *size);

@@ -36,29 +36,32 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
     switch(msg_pack->type)
     {
         
-        case STR_TYPE: // string data
+        case MSGPACK_STR_TYPE: // string data
           cmp_write_str(&ctx,msg_pack->data.string ,msg_pack->size );
           break;
           
           
-        case INT_TYPE: // integer data
+        case MSGPACK_INT_TYPE: // integer data
           cmp_write_integer(&ctx , msg_pack->data.integer);
            break;
            
-        case UINT_TYPE: // integer data
+        case MSGPACK_UINT_TYPE: // integer data
            cmp_write_uinteger(&ctx, msg_pack->data.integer);
            break;
 
 
            
-        case FLOAT_TYPE: // float data
+        case MSGPACK_FLOAT_TYPE: // float data
           cmp_write_decimal(&ctx, msg_pack->data.real);
            break;
         
-       case BIN_TYPE:  //binary data
+       case MSGPACK_BIN_TYPE:  //binary data
           cmp_write_bin(&ctx, msg_pack->data.string ,msg_pack->size );
-           break; 
-       
+           break;
+           
+       case MSGPACK_ARRAY_TYPE:
+             cmp_write_fixarray(&ctx, msg_pack->size);
+             break;
        default:
        while(1){printf("should not be here \n");}
          abort();
@@ -83,35 +86,36 @@ static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
     {
       switch(msg_pack->type)
       {
-        case STR_TYPE: // string data
+        case MSGPACK_STR_TYPE: // string data
           size += (msg_pack->size + 6);
           break;
           
           
-        case INT_TYPE: // integer data
+        case MSGPACK_INT_TYPE: // integer data
           size += 14;
            break;
            
-        case UINT_TYPE: // integer data
+        case MSGPACK_UINT_TYPE: // integer data
            size += 14;
            break;
 
 
            
-        case FLOAT_TYPE: // float data
+        case MSGPACK_FLOAT_TYPE: // float data
           size += 14;
            break;
         
-       case BIN_TYPE:  //binary data
+       case MSGPACK_BIN_TYPE:  //binary data
            size += (msg_pack->size + 6);
            break; 
        
-        
+       case MSGPACK_ARRAY_TYPE:
+           size += 6;       
       }
       msg_pack++;
     }
     
-    buffer= malloc(size);
+    buffer= malloc(size+2);// +2 for crc
     if(buffer == NULL)
     {
         abort();
