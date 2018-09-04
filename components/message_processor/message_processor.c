@@ -18,6 +18,7 @@ static SemaphoreHandle_t xSemaphore = NULL;
 void init_message_processor(void)
 {
     vSemaphoreCreateBinary( xSemaphore );
+    msg_command_data_initialize();
     
 }
 

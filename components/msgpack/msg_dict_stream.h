@@ -9,6 +9,7 @@ typedef enum {MSGPACK_INT_TYPE = 0,
                MSGPACK_STR_TYPE = 3, 
                MSGPACK_BIN_TYPE = 4,
                MSGPACK_ARRAY_TYPE = 5,
+               MSGPACK_MAP_TYPE = 6,
                } MSG_TYPE;
  
 
@@ -82,11 +83,15 @@ static inline void msg_dict_pack_array(MSG_PACK_ELEMENT *element,char *field_nam
     element->field_name = field_name;
     element->type = MSGPACK_ARRAY_TYPE;
     element->size = array_size;
-    
-  
+       
+}
 
-    
-    
+static inline void msg_dict_pack_map(MSG_PACK_ELEMENT *element,char *field_name, int map_size)
+{
+    element->field_name = field_name;
+    element->type = MSGPACK_MAP_TYPE;
+    element->size = map_size;
+       
 }
 
 char *msg_dict_stream( int *buffer_size, int number, MSG_PACK_ELEMENT *msg_pack);

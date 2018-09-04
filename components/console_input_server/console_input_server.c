@@ -63,29 +63,30 @@ static void console_input_task( void * pvParameters )
     msg_crc = (uint16_t *)&binary_buffer[binary_buffer_size-2];
     if( crc_16 == *msg_crc)
     {
-        printf("crc match \n");
+        ;//printf("crc match \n");
         
     
 
      
      if( message_processor(&msg_pack_number,&msg_pack_buffer,
                         binary_buffer,binary_buffer_size) == true)
-     {                   
-         ;//console_output_structured_data(msg_pack_number,msg_pack_buffer);
+     {       
+              
+         console_output_structured_data(msg_pack_number,msg_pack_buffer);
          
      }
      else
      {
-         printf("no message processor match");
+        ;// printf("no message processor match");
      }
      if(msg_pack_number >0)
      {
-         ;//free(msg_pack_buffer);
+         free(msg_pack_buffer);
      }
     } 
     else
     {
-       printf("crc no match \n");
+       ;//printf("crc no match \n");
     }    
      init_input_buffer();
    }

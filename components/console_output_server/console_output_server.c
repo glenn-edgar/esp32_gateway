@@ -52,7 +52,7 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     
     pack_buffer = msg_dict_stream( &pack_buffer_size,number,msg_pack);
     return_value = console_output_binary_data("MSGPACK:",pack_buffer,pack_buffer_size);
-   
+    
 
     free(pack_buffer);
     

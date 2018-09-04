@@ -19,6 +19,7 @@ static int command_number_size;
 
 void initialize_command_table( void )
 {
+    
     command_number_size = 0;
     memset(command_table,0,sizeof(command_table));
     
@@ -36,23 +37,26 @@ void msg_command_add_command(char *command_name,PROCESS_COMMAND_T process_comman
     
     command_number_size +=1;
     
-    stored_command_name = malloc(strlen(command_name));
+    stored_command_name = malloc(strlen(command_name)+5);
+    memset(stored_command_name,0,strlen(command_name)+5);
     if(stored_command_name == NULL)
     {
         abort();
     }
     strcpy(stored_command_name,command_name);
+    
     for(int i=0;i<COMMAND_TABLE_NUMBER;i++)
     {
+        
         if( command_table[i].command_name == NULL )
-        {
-            command_table[i].command_name = stored_command_name;
+        {   
+            command_table[i].command_name =  stored_command_name;
             command_table[i].process_command = process_command;
             return;
         }    
             
     }
-    abort();    
+    abort();   
         
 }
     
@@ -60,17 +64,25 @@ void msg_command_add_command(char *command_name,PROCESS_COMMAND_T process_comman
     
 PROCESS_COMMAND_T msg_command_find_command(char *command_name, uint32_t command_size)
 {
+    PROCESS_COMMAND_T return_value;
+    return_value = NULL;
     for(int i=0;i<COMMAND_TABLE_NUMBER;i++)
     {
-        if( ctx_strcmp(command_table[i].command_name, command_name,command_size) == 0 )
+        if(command_table[i].command_name == NULL)
+        {
+            break;
+        }
+       
+        if( ctx_strcmp(command_table[i].command_name, command_name,command_size) == true )
         {
             
-            return command_table[i].process_command;
+            return_value = command_table[i].process_command;
            
         }    
             
     }
-    return NULL;
+    
+    return return_value;
 }
     
     

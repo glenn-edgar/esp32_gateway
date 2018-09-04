@@ -1748,7 +1748,7 @@ bool cmp_read_str(cmp_ctx_t *ctx, char *data, uint32_t *size) {
 bool cmp_read_bin_size(cmp_ctx_t *ctx, uint32_t *size) 
 {
   cmp_object_t obj;
-
+  
   if (!cmp_read_object(ctx, &obj))
     return false;
 
@@ -1765,8 +1765,9 @@ bool cmp_read_bin_size(cmp_ctx_t *ctx, uint32_t *size)
       
 
       *size = obj.as.str_size;
-
+      return true;
     default:
+      printf("invalid type %x \n",obj.type);
       ctx->error = INVALID_TYPE_ERROR;
       return false;
   }

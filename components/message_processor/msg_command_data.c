@@ -5,6 +5,7 @@
 #include "msg_dict_stream.h"
 #include "msg_command_cmd_table.h"
 #include "msg_command_data.h"
+#include "esp_system.h"
 
 
 
@@ -48,7 +49,12 @@ static bool list_commands(int *msg_pack_number,
     
  static bool find_command_data(struct cmp_ctx_s *ctx,
                        char **command_data, uint32_t *command_size,
-                       char **msgpack_data, uint32_t *msgpack_size);   
+                       char **msgpack_data, uint32_t *msgpack_size);  
+
+static bool get_wifi_mac_address(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  );                       
     
 
 void msg_command_data_initialize(void)
@@ -78,12 +84,14 @@ bool msg_command_process_packet(int *msg_pack_number,
     
     return_value = find_command_data(ctx,&command_data,&command_size,
                                       &msgpack_data,&msgpack_size );
-    printf("return value %d  \n",return_value);
+    
     if( return_value == true)
     {
+        
         command_function =  msg_command_find_command(command_data,command_size);
         if( command_function != NULL )
         {
+            
             return_value = command_function( msg_pack_number, msg_pack,msgpack_data,msgpack_size);
         }
  
@@ -100,7 +108,7 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
 {
    bool return_value;
    uint32_t map_size;
-   int   leave_count = 2;
+   int   leave_count = 3;
   
    char *temp_pointer;
    uint32_t   temp_size;
@@ -112,21 +120,22 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
    for( int i= 0; i<map_size; i++ )
    {
        return_value =  msgpack_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+      
        check_return(return_value);
-       if( ctx_strcmp(COMMAND_FIELD,temp_pointer,temp_size ) == 0)
+       if( ctx_strcmp(COMMAND_FIELD,temp_pointer,temp_size ) == true)
        {
            
            return_value =  msgpack_scoop_field(ctx,(void **)command_data,command_size );
            check_return(return_value);
-           leave_count -=1;
+           leave_count = leave_count &0x2;
            
        }
-       else if( ctx_strcmp(DATA_FIELD,temp_pointer,temp_size ) == 0)
+       else if( ctx_strcmp(DATA_FIELD,temp_pointer,temp_size ) == true)
        {
            
            return_value = msgpack_scoop_field(ctx,(void **)msgpack_data,msgpack_size);
            check_return(return_value);
-           leave_count -=1;
+           leave_count = leave_count &1;
            
        }
        else
@@ -141,6 +150,7 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
        }    
  
    }
+   
    return false;    
 }      
  
@@ -156,9 +166,32 @@ static void add_commands(void)
    msg_command_add_command("FILE_DIR",file_directory) ; 
    msg_command_add_command("REBOOT",reboot) ; 
    msg_command_add_command("HEAP_SPACE",heap_space);  
-   msg_command_add_command("LIST_COMMANDS",list_commands);  
+   msg_command_add_command("LIST_COMMANDS",list_commands);
+   msg_command_add_command("GET_WIFI_MAC_ADDRESS",get_wifi_mac_address);   
+                           
     
-    
+}
+
+static  uint8_t mac_addr[7];
+static bool get_wifi_mac_address(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
+{
+  
+   MSG_PACK_ELEMENT *temp;
+   memset(mac_addr,0,sizeof(mac_addr));
+   temp = malloc(sizeof(MSG_PACK_ELEMENT)*3);
+   *msg_pack = temp;
+   *msg_pack_number = 3;
+   
+   msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+   msg_dict_pack_string(&temp[1],"COMMAND", "WIFI_MAC_ADDRESS");
+   esp_efuse_mac_get_default(mac_addr);
+  
+   msg_dict_pack_binary(&temp[2],"DATA", mac_addr, 6);  
+   
+   return true;
 }
 
 
@@ -228,3 +261,4 @@ static bool list_commands(int *msg_pack_number,
     
     
 }
+

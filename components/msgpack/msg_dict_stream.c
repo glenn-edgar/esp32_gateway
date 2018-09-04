@@ -25,17 +25,23 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
   cmp_ctx_t ctx;
   
   allocate_buffer( number, msg_pack );
-  
-  cmp_init(&ctx, buffer,reader, skipper, writer);    
+ 
+  cmp_init(&ctx, buffer,reader, skipper, writer);   
+   
   cmp_write_map(&ctx,number);
+ 
   for(int i=0; i<number;i++)
   {
-      
+    
     
     cmp_write_str(&ctx,msg_pack->field_name ,strlen(msg_pack->field_name) );
+    
     switch(msg_pack->type)
     {
         
+        case MSGPACK_MAP_TYPE:
+          cmp_write_map(&ctx,msg_pack->size);
+          break;
         case MSGPACK_STR_TYPE: // string data
           cmp_write_str(&ctx,msg_pack->data.string ,msg_pack->size );
           break;
@@ -56,14 +62,17 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
            break;
         
        case MSGPACK_BIN_TYPE:  //binary data
-          cmp_write_bin(&ctx, msg_pack->data.string ,msg_pack->size );
+          
+
+          cmp_write_bin(&ctx, msg_pack->data.binary ,msg_pack->size );
+          
            break;
            
        case MSGPACK_ARRAY_TYPE:
              cmp_write_fixarray(&ctx, msg_pack->size);
              break;
        default:
-       while(1){printf("should not be here \n");}
+       
          abort();
     }
     msg_pack++;
@@ -72,6 +81,7 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
   }
   add_zero();
   *buff_size = (current_buffer-buffer);
+  
   return buffer;
 }  
     
@@ -84,8 +94,13 @@ static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
     size = 10; //allocate map
     for(int i=0;i<number;i++)
     {
+      size += strlen(msg_pack->field_name) +6;
       switch(msg_pack->type)
       {
+        case MSGPACK_MAP_TYPE:
+          size += 6;
+        break;
+
         case MSGPACK_STR_TYPE: // string data
           size += (msg_pack->size + 6);
           break;
@@ -136,7 +151,7 @@ static bool reader(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
 //typedef size_t (*cmp_writer)(struct cmp_ctx_s *ctx, const void *data,size_t count);
 static size_t writer(struct cmp_ctx_s *ctx, const void *data, size_t count )
 {
-
+    
     if((current_buffer+count)>= buffer +buffer_size)
     {
        abort(); 
