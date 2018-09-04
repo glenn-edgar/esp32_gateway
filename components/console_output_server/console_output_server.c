@@ -10,6 +10,7 @@
 
 
 #include "hexadecimal.h"
+#include "crc-16.h"
 
 static SemaphoreHandle_t xSemaphore = NULL;
 
@@ -45,15 +46,42 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     bool return_value;
     char *pack_buffer;
     int   pack_buffer_size;
-    char *master_buffer;
-    //char *current_pointer;
+  
+  
+   
     
     pack_buffer = msg_dict_stream( &pack_buffer_size,number,msg_pack);
-    master_buffer = malloc(pack_buffer_size*2+50);
-    memset(master_buffer,0,pack_buffer_size*2+50);
-    strcpy(master_buffer,"BASE64:");
+    return_value = console_output_binary_data("MSGPACK:",pack_buffer,pack_buffer_size);
+   
+
+    free(pack_buffer);
     
-    binary_to_hex(pack_buffer,pack_buffer_size, master_buffer+strlen("BASE64:"));
+    
+    return return_value;
+       
+    
+    
+}
+
+bool console_output_binary_data(char *prefix,char *binary_data,int binary_size)
+{
+    bool return_value;
+     char *master_buffer;
+    char crc_buf[6];
+    uint16_t crc16;
+
+     memset(crc_buf,0,sizeof(crc_buf)-1);
+    crc16 = calc_crc16(binary_data, binary_size);
+
+    binary_to_hex((char*)&crc16,sizeof(crc16),crc_buf);
+
+    master_buffer = malloc(binary_size*2+50);
+    memset(master_buffer,0,binary_size*2+50);
+    strcpy(master_buffer,prefix);
+    
+    binary_to_hex(binary_data,binary_size, master_buffer+strlen("MSGPACK:"));
+    strcat(master_buffer,crc_buf);
+ 
     strcat(master_buffer,":END");
     
  
@@ -68,12 +96,11 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
     {
         return_value = false;
     }
-    free(pack_buffer);
+    
     free(master_buffer);
     
-    return return_value;
-       
+    return return_value;   
+    
     
     
 }
-

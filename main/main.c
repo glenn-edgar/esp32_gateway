@@ -23,6 +23,7 @@
 #include "rom/uart.h"
 #include "flash/flash_setup.h"
 #include "sd_card.h"
+#include "message_processor.h"
 
 
 #include "configuration.h"
@@ -80,6 +81,7 @@ void app_main(void)
 
 #endif
     flash_initialize_flash();
+    init_message_processor();
     console_output_server();
    initialize_console_input_server();
 #if _ENABLE_ETHERNET_ 

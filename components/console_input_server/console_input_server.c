@@ -14,8 +14,10 @@
 #include "freertos/task.h"
 #include "watchdog.h"
 #include "console_output_server.h"
+#include "console_input_server.h"
 #include "message_processor.h"
 #include "hexadecimal.h"
+#include "crc-16.h"
 
 #define INPUT_BUFFER_SIZE 3000
 
@@ -38,7 +40,10 @@ void initialize_console_input_server( void)
 // Task to be created.
 static void console_input_task( void * pvParameters )
 {
- 
+ int crc_16;
+ int msg_pack_number;
+ uint16_t *msg_crc;
+ MSG_PACK_ELEMENT *msg_pack_buffer;
  int binary_buffer_size;
  int input_number;
  wdt_task_subscribe();
@@ -53,10 +58,35 @@ static void console_input_task( void * pvParameters )
     
     binary_buffer_size = input_number/2;    
     hex_to_binary(input_buffer,input_number, binary_buffer);   
-     //check crc16 last two bytes
-     
-     message_processor(binary_buffer,binary_buffer_size-2);
+    crc_16 = calc_crc16(binary_buffer,binary_buffer_size-2);
+    
+    msg_crc = (uint16_t *)&binary_buffer[binary_buffer_size-2];
+    if( crc_16 == *msg_crc)
+    {
+        printf("crc match \n");
+        
+    
 
+     
+     if( message_processor(&msg_pack_number,&msg_pack_buffer,
+                        binary_buffer,binary_buffer_size) == true)
+     {                   
+         ;//console_output_structured_data(msg_pack_number,msg_pack_buffer);
+         
+     }
+     else
+     {
+         printf("no message processor match");
+     }
+     if(msg_pack_number >0)
+     {
+         ;//free(msg_pack_buffer);
+     }
+    } 
+    else
+    {
+       printf("crc no match \n");
+    }    
      init_input_buffer();
    }
    vTaskDelay(20 / portTICK_PERIOD_MS);
@@ -75,9 +105,11 @@ static bool build_buffer(int *input_number)
     int  temp;
     
     temp = getchar();
-    while(temp!=-1)
+    while(temp>=0)
     {
+        //printf("input character %c \n",temp);
         input_buffer[input_index] = temp;
+        
         input_index += 1;
         if( input_index >= sizeof(input_buffer))
         {
@@ -86,8 +118,11 @@ static bool build_buffer(int *input_number)
         }
         if( temp == '\n')
         {
+           
             input_index -= 1;
+            input_buffer[input_index]=0;
             *input_number = input_index;
+            
              return true;
         }
         temp = getchar();

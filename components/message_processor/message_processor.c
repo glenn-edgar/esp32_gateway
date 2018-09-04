@@ -6,13 +6,13 @@
 #include <esp_types.h>
 #include "freertos/semphr.h"
 
-
+#include "msg_command_data.h"
 
 #include "hexadecimal.h"
 #include "message_processor.h"
 
 static SemaphoreHandle_t xSemaphore = NULL;
-static void process_message(char * input_buffer,int input_number);
+
 
 
 void init_message_processor(void)
@@ -21,22 +21,22 @@ void init_message_processor(void)
     
 }
 
-void message_processor(char * input_buffer,int input_number)
+bool message_processor(int *msg_pack_number, 
+                       MSG_PACK_ELEMENT **msg_pack,
+                       char * input_buffer,int input_number)
 {
-    
+    bool return_value;
     if( xSemaphoreTake( xSemaphore, ( TickType_t ) 10 ) == true )
     {
-        process_message(input_buffer,input_number);
+        return_value =msg_command_process_packet(msg_pack_number,msg_pack,input_buffer,input_number);
         xSemaphoreGive( xSemaphore );
     }
+    else
+    {
+        return_value = false;
+    }
+    return return_value;
 
     
 }
 
-static void process_message(char * input_buffer,int input_number)
-{
-
-    // parse for operator
-    // dispatch command table
-    
-}

@@ -1,4 +1,5 @@
 #include <esp_types.h>
+#include <stdio.h>
 #include "cmp.h"
 #include "msgpack_utillities.h"
 #include "msg_dict_stream.h"
@@ -16,13 +17,34 @@ static void add_commands(void);
     build in commands
 
 */
-static bool file_write( char* msg_data, int msg_data_size);
-static bool file_read(char* msg_data, int msg_data_size);
-static bool file_delete(char* msg_data, int msg_data_size);
-static bool file_directory(char* msg_data, int msg_data_size);
-static bool reboot(char* msg_data, int msg_data_size);
-static bool heap_space(char* msg_data, int msg_data_size);
-static bool list_commands(char *msg_data,int msg_data_size);
+static bool file_write( int *msg_pack_number, 
+                        MSG_PACK_ELEMENT **msg_pack, 
+                        char* msg_data, 
+                        int msg_data_size  );
+static bool file_read( int *msg_pack_number, 
+                       MSG_PACK_ELEMENT **msg_pack, 
+                       char* msg_data, 
+                       int msg_data_size  );
+static bool file_delete( int *msg_pack_number, 
+                         MSG_PACK_ELEMENT **msg_pack, 
+                         char* msg_data, 
+                        int msg_data_size  );
+static bool file_directory( int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                         int msg_data_size  );
+static bool reboot( int *msg_pack_number, 
+                       MSG_PACK_ELEMENT **msg_pack, 
+                       char* msg_data, 
+                       int msg_data_size  );
+static bool heap_space( int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  );
+static bool list_commands(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  );
     
  static bool find_command_data(struct cmp_ctx_s *ctx,
                        char **command_data, uint32_t *command_size,
@@ -38,7 +60,9 @@ void msg_command_data_initialize(void)
     
 }
 
-bool msg_command_process_packet(char *input_packet, int size)
+bool msg_command_process_packet(int *msg_pack_number, 
+                                 MSG_PACK_ELEMENT **msg_pack,
+                                char * input_packet,int size )
 {
     cmp_ctx_t *ctx;
     bool return_value;
@@ -48,15 +72,19 @@ bool msg_command_process_packet(char *input_packet, int size)
     uint32_t msgpack_size;
     PROCESS_COMMAND_T command_function;
     
+    *msg_pack_number = 0;
+   
     ctx = msgpack_dict_scan_init( input_packet, size );
+    
     return_value = find_command_data(ctx,&command_data,&command_size,
                                       &msgpack_data,&msgpack_size );
+    printf("return value %d  \n",return_value);
     if( return_value == true)
     {
         command_function =  msg_command_find_command(command_data,command_size);
         if( command_function != NULL )
         {
-            return_value = command_function( msgpack_data, msgpack_size );
+            return_value = command_function( msg_pack_number, msg_pack,msgpack_data,msgpack_size);
         }
  
         
@@ -134,33 +162,54 @@ static void add_commands(void)
 }
 
 
-static bool file_write( char* msg_data, int msg_data_size)
+static bool file_write(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     return false;
 }
-static bool file_read(char* msg_data, int msg_data_size)
+static bool file_read(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     return false;
 }
-static bool file_delete(char* msg_data, int msg_data_size)
+static bool file_delete(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     return false;
 }
-static bool file_directory(char* msg_data, int msg_data_size)
+static bool file_directory(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     return false;
 }
-static bool reboot(char* msg_data, int msg_data_size)
+static bool reboot(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     return false;
 }
-static bool heap_space(char* msg_data, int msg_data_size)
+static bool heap_space(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     
    return false;  
     
 }
-static bool list_commands(char *msg_data,int msg_data_size)
+static bool list_commands(int *msg_pack_number, 
+                          MSG_PACK_ELEMENT **msg_pack, 
+                          char* msg_data, 
+                          int msg_data_size  )
 {
     
     

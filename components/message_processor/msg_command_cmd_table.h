@@ -3,11 +3,14 @@
 #define _MSG_COMMAND_CMD_TABLE_H_
 
 #include "cmp.h"
-
+#include "msg_dict_stream.h"
 #define COMMAND_TABLE_NUMBER 64
 
 
-typedef bool (*PROCESS_COMMAND_T)( char* msg_data, int msg_data_size  );
+typedef bool (*PROCESS_COMMAND_T)( int *msg_pack_number, 
+                                   MSG_PACK_ELEMENT **msg_pack, 
+                                   char* msg_data, 
+                                   int msg_data_size  );
  
 void initialize_command_table( void );
 

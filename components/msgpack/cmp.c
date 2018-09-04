@@ -2882,6 +2882,6 @@ bool cmp_object_to_bin(cmp_ctx_t *ctx, cmp_object_t *obj, void *data, uint32_t b
       return false;
    }
 }
-
+#include "cmp_extensions.h"
 /* vi: set et ts=2 sw=2: */
 
