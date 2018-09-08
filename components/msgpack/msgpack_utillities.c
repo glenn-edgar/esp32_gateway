@@ -70,12 +70,12 @@ bool msgpack_get_bin_data_ptr(cmp_ctx_t *ctx ,void **data, uint32_t *size )
     bool return_value;
     
     return_value =  cmp_read_bin_size(ctx, size);
+
     if(return_value == true)
     {   
-        *data =  cmp_skip_function(NULL,NULL, *size);
+        *data =  ctx->skip(NULL,NULL, *size);
         
     } 
-        
     return return_value;
     
     
@@ -84,21 +84,24 @@ bool msgpack_get_bin_data_ptr(cmp_ctx_t *ctx ,void **data, uint32_t *size )
 }
 
 
-bool msgpack_skip_field(cmp_ctx_t *ctx, uint32_t number_to_skip)
+bool msgpack_skip_field(cmp_ctx_t *ctx)
 {
     bool return_value;
     cmp_object_t obj;
     uint32_t          size;
+    uint32_t          number_to_skip = 1;
     
     return_value = true;
+    
     while((number_to_skip > 0) && (return_value == true))
     {
+        
         number_to_skip -= 1;
         return_value = analyize_current_object(ctx, &obj, &number_to_skip, &size);
         
         if( return_value == true)
         {
-          return_value = cmp_skip_function( NULL,NULL, size ); 
+            ctx->skip( NULL,NULL, size ); 
       
         }
     }
@@ -117,20 +120,23 @@ bool  msgpack_scoop_field(cmp_ctx_t  *ctx, void **data, uint32_t *size)
     
     
     number_to_skip -= 1;
-    return_value = analyize_current_object(ctx, &obj, &number_to_skip, size);
     reference_point = buffer_ptr;
+    return_value = analyize_current_object(ctx, &obj, &number_to_skip, size);
+    
     if( return_value == true)
     {
-          return_value = cmp_skip_function( NULL,NULL, *size );   
+          ctx->skip( NULL,NULL, *size );   
     }
+    if(return_value == false){return false; }
     return_value = true;
     while((number_to_skip > 0) && (return_value == true))
     {
         number_to_skip -= 1;
         return_value = analyize_current_object(ctx, &obj, &number_to_skip, size);
+        
         if( return_value == true)
         {
-          return_value = cmp_skip_function( NULL,NULL, *size );   
+            ctx->skip( NULL,NULL, *size );   
         }
     }
     *size = buffer_ptr-reference_point;

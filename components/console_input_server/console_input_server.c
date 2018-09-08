@@ -42,6 +42,7 @@ static void console_input_task( void * pvParameters )
 {
  int crc_16;
  int msg_pack_number;
+ 
  uint16_t *msg_crc;
  MSG_PACK_ELEMENT *msg_pack_buffer;
  int binary_buffer_size;
@@ -55,7 +56,7 @@ static void console_input_task( void * pvParameters )
   
    if( build_buffer(&input_number)  == true )
    { 
-    
+    //printf("build buffer is true \n");
     binary_buffer_size = input_number/2;    
     hex_to_binary(input_buffer,input_number, binary_buffer);   
     crc_16 = calc_crc16(binary_buffer,binary_buffer_size-2);
@@ -63,7 +64,7 @@ static void console_input_task( void * pvParameters )
     msg_crc = (uint16_t *)&binary_buffer[binary_buffer_size-2];
     if( crc_16 == *msg_crc)
     {
-        ;//printf("crc match \n");
+        //printf("crc match \n");
         
     
 
@@ -77,7 +78,7 @@ static void console_input_task( void * pvParameters )
      }
      else
      {
-        ;// printf("no message processor match");
+        //printf("no message processor match\n");
      }
      if(msg_pack_number >0)
      {
@@ -90,7 +91,7 @@ static void console_input_task( void * pvParameters )
     }    
      init_input_buffer();
    }
-   vTaskDelay(20 / portTICK_PERIOD_MS);
+   vTaskDelay(10 / portTICK_PERIOD_MS);
 
  }
 }
@@ -106,9 +107,10 @@ static bool build_buffer(int *input_number)
     int  temp;
     
     temp = getchar();
+    
     while(temp>=0)
     {
-        //printf("input character %c \n",temp);
+        
         input_buffer[input_index] = temp;
         
         input_index += 1;

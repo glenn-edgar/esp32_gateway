@@ -6,6 +6,8 @@
 #include "msg_command_cmd_table.h"
 #include "msg_command_data.h"
 #include "esp_system.h"
+#include <dirent.h>
+#include "msgpack_block_reader.h"
 
 
 
@@ -20,30 +22,32 @@ static void add_commands(void);
 */
 static bool file_write( int *msg_pack_number, 
                         MSG_PACK_ELEMENT **msg_pack, 
+                         
                         char* msg_data, 
                         int msg_data_size  );
 static bool file_read( int *msg_pack_number, 
-                       MSG_PACK_ELEMENT **msg_pack, 
+                       MSG_PACK_ELEMENT **msg_pack,                                               
                        char* msg_data, 
                        int msg_data_size  );
 static bool file_delete( int *msg_pack_number, 
-                         MSG_PACK_ELEMENT **msg_pack, 
+                         MSG_PACK_ELEMENT **msg_pack,                                                 
                          char* msg_data, 
                         int msg_data_size  );
 static bool file_directory( int *msg_pack_number, 
-                          MSG_PACK_ELEMENT **msg_pack, 
+                          MSG_PACK_ELEMENT **msg_pack,                                                       
                           char* msg_data, 
                          int msg_data_size  );
 static bool reboot( int *msg_pack_number, 
-                       MSG_PACK_ELEMENT **msg_pack, 
+                       MSG_PACK_ELEMENT **msg_pack,                                                
                        char* msg_data, 
                        int msg_data_size  );
 static bool heap_space( int *msg_pack_number, 
-                          MSG_PACK_ELEMENT **msg_pack, 
+                          MSG_PACK_ELEMENT **msg_pack,                                                      
                           char* msg_data, 
                           int msg_data_size  );
 static bool list_commands(int *msg_pack_number, 
                           MSG_PACK_ELEMENT **msg_pack, 
+                                                     
                           char* msg_data, 
                           int msg_data_size  );
     
@@ -88,6 +92,8 @@ bool msg_command_process_packet(int *msg_pack_number,
     if( return_value == true)
     {
         
+       
+       
         command_function =  msg_command_find_command(command_data,command_size);
         if( command_function != NULL )
         {
@@ -96,6 +102,10 @@ bool msg_command_process_packet(int *msg_pack_number,
         }
  
         
+    }
+    else
+    {
+        printf("command not found \n");
     }
     
     return return_value;
@@ -119,13 +129,14 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
   
    for( int i= 0; i<map_size; i++ )
    {
+       //printf("loop index %d\n",i);
        return_value =  msgpack_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
-      
+       
        check_return(return_value);
        if( ctx_strcmp(COMMAND_FIELD,temp_pointer,temp_size ) == true)
        {
-           
-           return_value =  msgpack_scoop_field(ctx,(void **)command_data,command_size );
+           //printf("found command \n");
+           return_value = msgpack_get_bin_data_ptr(ctx,(void **)command_data,command_size );
            check_return(return_value);
            leave_count = leave_count &0x2;
            
@@ -133,15 +144,17 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
        else if( ctx_strcmp(DATA_FIELD,temp_pointer,temp_size ) == true)
        {
            
+           //printf("found data \n");
            return_value = msgpack_scoop_field(ctx,(void **)msgpack_data,msgpack_size);
+           
            check_return(return_value);
            leave_count = leave_count &1;
            
        }
        else
        {
-           
-          msgpack_skip_field(ctx,1); 
+          printf("should not happen \n");
+          msgpack_skip_field(ctx); 
            
        }
        if(leave_count == 0)
@@ -189,17 +202,71 @@ static bool get_wifi_mac_address(int *msg_pack_number,
    msg_dict_pack_string(&temp[1],"COMMAND", "WIFI_MAC_ADDRESS");
    esp_efuse_mac_get_default(mac_addr);
   
-   msg_dict_pack_binary(&temp[2],"DATA", mac_addr, 6);  
+   msg_dict_pack_binary(&temp[2],"DATA", mac_addr, 6); 
+   
    
    return true;
 }
 
 
 static bool file_write(int *msg_pack_number, 
-                          MSG_PACK_ELEMENT **msg_pack, 
+                          MSG_PACK_ELEMENT **msg_pack,  
                           char* msg_data, 
                           int msg_data_size  )
 {
+    
+    CMP_READ_BLOCK_T cmpr;
+    uint32_t size =  33;
+    char *temp_pointer;
+    uint32_t temp_length;
+    
+    
+    
+    *msg_pack_number = 0;
+
+    //FILE *spiffs_file;
+    
+    char *file_name;
+    
+    file_name = malloc(size);
+    memset(file_name,0,sizeof(size));
+    strcat(file_name,"/spiffs/");
+    msgpack_block_init(&cmpr,msg_data, msg_data_size);
+    
+    size -= strlen(file_name);
+    printf("file write \n");
+    if( msgpack_block_find_string(&cmpr,"FILE_NAME", file_name, &size) != true )
+    {
+       printf("file name not found \n");
+       return false;
+        
+    }
+    
+    printf("file name found %s %d \n\n",file_name,size);
+    if( msgpack_block_find_object(&cmpr,"FILE_DATA", &temp_pointer, &temp_length) != true)
+    {
+       printf("file data not found \n");
+       return false;
+        
+    }
+    printf("file_data found %d \n",temp_length);
+    
+   
+    
+   
+#if 0
+    spiffs_file = fopen(file_name,"wb");
+    nwrite = fwrite(buffer,1,data_size,to_fp);
+    temp = malloc(sizeof(MSG_PACK_ELEMENT)*5);
+    *msg_pack = temp;
+    *msg_pack_number = pack_elements;
+    msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+    msg_dict_pack_string(&temp[1],"COMMAND", "FILE_DIR");
+    msg_dict_pack_map(&temp[2],"DATA",2);
+    msg_dict_pack_string_dynamic(&temp[3],"FILE_NAME", file_name);
+    msg_dict_pack_unsigned_integer(&temp[4],"BYTES_WROTE", nwrite);
+    return true;
+#endif
     return false;
 }
 static bool file_read(int *msg_pack_number, 
@@ -216,49 +283,156 @@ static bool file_delete(int *msg_pack_number,
 {
     return false;
 }
+
+
+static int count_spiffs_directory(void )
+{ 
+  
+   struct dirent *de;  // Pointer for directory entry
+   DIR *dr;
+   int count;
+   
+   
+   count = 0;
+  
+   dr   = opendir("/spiffs/");
+   if (dr == NULL)  // opendir returns NULL if couldn't open directory
+   {
+        printf("Could not open current directory \n" );
+        abort(); // already been opend once
+   }
+   
+  while ((de = readdir(dr)) != NULL)
+  {
+            count += 1;
+            printf("name %s\n", de->d_name);
+            
+           
+  }
+   closedir(dr); 
+   return count;   
+    
+}    
+
+static int list_spiffs_directory(int max_count, MSG_PACK_ELEMENT *element )
+{ 
+  
+   struct dirent *de;  // Pointer for directory entry
+   DIR *dr;
+   int count;
+   
+   
+   count = 0;
+  
+   dr   = opendir("/spiffs/");
+   if (dr == NULL)  // opendir returns NULL if couldn't open directory
+   {
+        printf("Could not open current directory \n" );
+        abort(); // already been opend once
+   }
+   
+  while ((de = readdir(dr)) != NULL)
+  {
+            count += 1;
+            printf("name %s\n", de->d_name);
+            msg_dict_pack_string(element,NULL, de->d_name);
+            element++;
+           
+            if(count >= max_count)
+            {
+                break;
+            }
+           
+  }
+   closedir(dr); 
+   return count;   
+    
+}  
+
 static bool file_directory(int *msg_pack_number, 
                           MSG_PACK_ELEMENT **msg_pack, 
                           char* msg_data, 
                           int msg_data_size  )
 {
-    return false;
+    MSG_PACK_ELEMENT *temp;
+    int pack_elements;
+    int file_elements;
+   
+   
+   file_elements =  count_spiffs_directory();
+   pack_elements = file_elements +3;
+   temp = malloc(sizeof(MSG_PACK_ELEMENT)*pack_elements);
+   *msg_pack = temp;
+   *msg_pack_number = pack_elements;
+   
+   msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+   msg_dict_pack_string(&temp[1],"COMMAND", "FILE_DIR");
+ 
+   msg_dict_pack_array(&temp[2],"DATA", file_elements);
+   list_spiffs_directory(file_elements, &temp[3] );
+   return true;
 }
+
+
+
+
 static bool reboot(int *msg_pack_number, 
                           MSG_PACK_ELEMENT **msg_pack, 
+
                           char* msg_data, 
                           int msg_data_size  )
 {
+    abort();
     return false;
 }
 static bool heap_space(int *msg_pack_number, 
-                          MSG_PACK_ELEMENT **msg_pack, 
+                          MSG_PACK_ELEMENT **msg_pack,  
                           char* msg_data, 
                           int msg_data_size  )
 {
     
-   return false;  
+   MSG_PACK_ELEMENT *temp;
+   
+   temp = malloc(sizeof(MSG_PACK_ELEMENT)*3);
+   *msg_pack = temp;
+   *msg_pack_number = 3;
+   
+   msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+   msg_dict_pack_string(&temp[1],"COMMAND", "HEAP_SPACE");
+   
+  
+   msg_dict_pack_unsigned_integer(&temp[2],"DATA",esp_get_free_heap_size());
+   return true; 
+   
+    
     
 }
 static bool list_commands(int *msg_pack_number, 
-                          MSG_PACK_ELEMENT **msg_pack, 
+                          MSG_PACK_ELEMENT **msg_pack,                                                
                           char* msg_data, 
                           int msg_data_size  )
 {
     
-    
-#if 0   
-    cmd_number = msg_command_command_number;
-    //pack map
-    for(int i= 0;i<cmd_number;i++)
-    {
-       //pack_string()
-        
-        
-    }
-#endif
-   return false;   
-    
-    
-    
-}
+   MSG_PACK_ELEMENT *temp;
+   int pack_elements;
+   int command_elements;
+   
+   command_elements =  msg_command_command_number() ;
+   pack_elements = command_elements +3;
+   temp = malloc(sizeof(MSG_PACK_ELEMENT)*pack_elements);
+   *msg_pack = temp;
+   *msg_pack_number = pack_elements;
+   
+   msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+   msg_dict_pack_string(&temp[1],"COMMAND", "LIST_COMMANDS");
+ 
+   msg_dict_pack_array(&temp[2],"DATA", command_elements);
+   for(int i=0; i<command_elements;i++)
+   {
+       msg_dict_pack_string(&temp[i+3 ],NULL, msg_command_list_cmd_name(i));
+   }
+   return true;
+}   
+   
+
 

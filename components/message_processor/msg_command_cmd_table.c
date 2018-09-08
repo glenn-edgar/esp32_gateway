@@ -27,7 +27,24 @@ void initialize_command_table( void )
 
 int msg_command_command_number(void)
 {
-    return command_number_size;
+    return command_number_size-1;
+    
+}
+
+
+char *msg_command_list_cmd_name(int index)
+{
+    char *return_value;
+    if( index >= command_number_size )
+    {
+          return_value = NULL;
+        
+    }
+    else
+    {
+        return_value = command_table[index].command_name;
+    }
+    return return_value;
     
 }
 

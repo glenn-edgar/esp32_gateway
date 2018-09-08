@@ -4,7 +4,7 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
   *size = 0;
   if (!read_type_marker(ctx, &type_marker))
     return false;
-
+  //printf("type marker is %x number to skip %d size %d\n",type_marker,*skip_number,  *size);
   if (type_marker <= 0x7F) {
     obj->type = CMP_TYPE_POSITIVE_FIXNUM;
     obj->as.u8 = type_marker;
@@ -12,14 +12,14 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
   else if (type_marker <= 0x8F) {
     obj->type = CMP_TYPE_FIXMAP;
     obj->as.map_size = type_marker & FIXMAP_SIZE;
-    *size = obj->as.map_size;
-    skip_number += *size;
+    *size = 0;
+    *skip_number += obj->as.map_size*2;
   }
   else if (type_marker <= 0x9F) {
     obj->type = CMP_TYPE_FIXARRAY;
     obj->as.array_size = type_marker & FIXARRAY_SIZE;
-    
-    skip_number +=  *size;
+    *size = 0;
+    *skip_number +=  obj->as.array_size;
   }
   else if (type_marker <= 0xBF) {
     obj->type = CMP_TYPE_FIXSTR;
@@ -277,7 +277,8 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
       return false;
     }
     obj->as.array_size = be16(obj->as.u16);
-    *skip_number += obj->as.str_size;
+    *size =0;
+    *skip_number += obj->as.array_size;
   }
   else if (type_marker == ARRAY32_MARKER) {
     obj->type = CMP_TYPE_ARRAY32;
@@ -286,8 +287,8 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
       return false;
     }
     obj->as.array_size = be32(obj->as.u32);
-    
-    *skip_number += *size;
+    *size = 0;
+    *skip_number += obj->as.array_size;
   }
   else if (type_marker == MAP16_MARKER) {
     obj->type = CMP_TYPE_MAP16;
@@ -296,7 +297,8 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
       return false;
     }
     obj->as.map_size = be16(obj->as.u16);
-    *skip_number += *size;
+    *size =0;
+    *skip_number += obj->as.map_size*2;
   }
   else if (type_marker == MAP32_MARKER) {
     obj->type = CMP_TYPE_MAP32;
@@ -305,7 +307,8 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
       return false;
     }
     obj->as.map_size = be32(obj->as.u32);
-    *skip_number += *size;
+    *size =0;
+    *skip_number += obj->as.map_size*2;
   }
   else if (type_marker >= NEGATIVE_FIXNUM_MARKER) {
     obj->type = CMP_TYPE_NEGATIVE_FIXNUM;
@@ -315,6 +318,6 @@ bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number,
     ctx->error = INVALID_TYPE_ERROR;
     return false;
   }
-
+  //printf("type marker is %x number to skip %d size %d\n",type_marker,*skip_number,  *size);
   return true;
 }

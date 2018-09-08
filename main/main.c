@@ -58,7 +58,7 @@
                                 
 void app_main(void)
 {
-
+   MSG_PACK_ELEMENT msg_pack[3];
 
 #if _ENABLE_HEART_BEAT_ 
     int heartbeat_toggle;
@@ -104,11 +104,15 @@ void app_main(void)
      heartbeat_toggle = 1;
      gpio_config_output_pin( HEART_BEAT );
 #endif
+      msg_dict_pack_string(&msg_pack[0],"TOPIC","HEART_BEAT");      
+      msg_dict_pack_float(&msg_pack[1],"CHIP_TEMP", ( temprature_sens_read() -32)*9/5);
+      msg_dict_pack_unsigned_integer(&msg_pack[2],"FREE_HEAP",esp_get_free_heap_size());
+      console_output_structured_data(3, msg_pack);
 
     while(1)
     {
 
-      MSG_PACK_ELEMENT msg_pack[3];
+      
 #if 0
       printf("high water stack mark %d \n",uxTaskGetStackHighWaterMark( NULL ));
       printf("heap space %d \n",esp_get_free_heap_size());
@@ -116,12 +120,14 @@ void app_main(void)
 #if _ENABLE_HEART_BEAT_      
        heartbeat_toggle = (heartbeat_toggle^0xffff)&0x0001;
        gpio_set_value(HEART_BEAT,heartbeat_toggle);
-#endif    
-      wdt_reset_task_time();
+#endif 
+#if 0   
       msg_dict_pack_string(&msg_pack[0],"TOPIC","HEART_BEAT");      
       msg_dict_pack_float(&msg_pack[1],"CHIP_TEMP", ( temprature_sens_read() -32)*9/5);
       msg_dict_pack_unsigned_integer(&msg_pack[2],"FREE_HEAP",esp_get_free_heap_size());
       console_output_structured_data(3, msg_pack);
+#endif
+      wdt_reset_task_time();
       vTaskDelay(1000 / portTICK_PERIOD_MS);
         
        

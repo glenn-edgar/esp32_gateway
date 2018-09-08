@@ -9,14 +9,17 @@
 #define COMMAND_FIELD "COMMAND"
 #define DATA_FIELD "DATA"
 
+
 void msg_command_data_initialize(void);
 bool msg_command_process_packet(int *msg_pack_number, 
+                                
                                  MSG_PACK_ELEMENT **msg_pack,
                                 char * input_buffer,int input_number);
 
 
 
-
+int msg_command_command_number(void);
+char *msg_command_list_cmd_name(int index);
 
 
 #endif

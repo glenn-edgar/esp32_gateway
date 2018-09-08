@@ -12,30 +12,39 @@ static char *buffer;
 
 static void add_zero(void);
 static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack );
-
+static int find_map_number(int number, MSG_PACK_ELEMENT *msg_pack );
 static bool reader(struct cmp_ctx_s *ctx, void *data, size_t number_to_read );
 static size_t writer(struct cmp_ctx_s *ctx, const void *data, size_t count );
 static char * skipper(struct cmp_ctx_s *ctx, void *data, size_t number_to_read );
 
 
 
-char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
+char * msg_dict_stream(  int *buff_size, int number,  MSG_PACK_ELEMENT *msg_pack)
 
 {
   cmp_ctx_t ctx;
+  int map_number;
   
+  map_number = find_map_number(number,msg_pack);
   allocate_buffer( number, msg_pack );
  
   cmp_init(&ctx, buffer,reader, skipper, writer);   
    
-  cmp_write_map(&ctx,number);
+  cmp_write_map(&ctx,map_number);
  
   for(int i=0; i<number;i++)
   {
-    
-    
-    cmp_write_str(&ctx,msg_pack->field_name ,strlen(msg_pack->field_name) );
-    
+
+    //printf("input packet %d %d \n",i,msg_pack->type);
+    if(msg_pack->field_name != NULL )
+    {
+      cmp_write_str(&ctx,msg_pack->field_name ,strlen(msg_pack->field_name) );
+    }
+    else
+    {
+        ;//printf("null field %d \n",msg_pack->type);
+    }
+
     switch(msg_pack->type)
     {
         
@@ -44,6 +53,10 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
           break;
         case MSGPACK_STR_TYPE: // string data
           cmp_write_str(&ctx,msg_pack->data.string ,msg_pack->size );
+          if(msg_pack->malloc_flag == true)
+          {
+             free(msg_pack->data.string);
+          }
           break;
           
           
@@ -52,7 +65,7 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
            break;
            
         case MSGPACK_UINT_TYPE: // integer data
-           cmp_write_uinteger(&ctx, msg_pack->data.integer);
+           cmp_write_uinteger(&ctx, msg_pack->data.uinteger);
            break;
 
 
@@ -65,11 +78,16 @@ char * msg_dict_stream(  int *buff_size, int number, MSG_PACK_ELEMENT *msg_pack)
           
 
           cmp_write_bin(&ctx, msg_pack->data.binary ,msg_pack->size );
+          if(msg_pack->malloc_flag == true)
+          {
+             free(msg_pack->data.string);
+          }
           
            break;
            
        case MSGPACK_ARRAY_TYPE:
-             cmp_write_fixarray(&ctx, msg_pack->size);
+              
+              cmp_write_array(&ctx, msg_pack->size);
              break;
        default:
        
@@ -94,7 +112,10 @@ static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
     size = 10; //allocate map
     for(int i=0;i<number;i++)
     {
-      size += strlen(msg_pack->field_name) +6;
+      if( msg_pack->field_name != NULL)
+      {
+         size += strlen(msg_pack->field_name) +6;
+      }
       switch(msg_pack->type)
       {
         case MSGPACK_MAP_TYPE:
@@ -142,6 +163,36 @@ static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
     
 }
 
+static int find_map_number( int number, MSG_PACK_ELEMENT *msg_pack )
+{
+    int map_number;
+   
+    map_number = number;
+   
+    for(int i=0;i<number;i++)
+    {
+
+      switch(msg_pack->type)
+      {
+        case MSGPACK_MAP_TYPE:
+          map_number -= msg_pack->size*2;
+        break;
+
+
+       
+       case MSGPACK_ARRAY_TYPE:
+          map_number -= msg_pack->size;
+        break;
+        
+        default:
+           break;
+      
+      }
+      msg_pack++;
+    }
+    
+    return map_number;
+}
 static bool reader(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
 {
    abort(); // should not happen
