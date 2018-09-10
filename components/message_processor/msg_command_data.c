@@ -9,7 +9,9 @@
 #include <dirent.h>
 #include "msgpack_block_reader.h"
 
-
+#define FILE_MOUNT_SIZE 16
+#define FILE_SIZE 33
+#define DATA_SIZE 2000
 
 #define check_return(return_value )\
     if(return_value != true){ return false; }
@@ -30,6 +32,10 @@ static bool file_read( int *msg_pack_number,
                        char* msg_data, 
                        int msg_data_size  );
 static bool file_delete( int *msg_pack_number, 
+                         MSG_PACK_ELEMENT **msg_pack,                                                 
+                         char* msg_data, 
+                        int msg_data_size  );
+static bool file_rename( int *msg_pack_number, 
                          MSG_PACK_ELEMENT **msg_pack,                                                 
                          char* msg_data, 
                         int msg_data_size  );
@@ -177,6 +183,7 @@ static void add_commands(void)
    msg_command_add_command("FILE_READ",file_read)   ; 
    msg_command_add_command("FILE_DELETE",file_delete) ; 
    msg_command_add_command("FILE_DIR",file_directory) ; 
+   msg_command_add_command("FILE_RENAME",file_rename);
    msg_command_add_command("REBOOT",reboot) ; 
    msg_command_add_command("HEAP_SPACE",heap_space);  
    msg_command_add_command("LIST_COMMANDS",list_commands);
@@ -219,18 +226,22 @@ static bool file_write(int *msg_pack_number,
     uint32_t size =  33;
     char *temp_pointer;
     uint32_t temp_length;
-    
-    
+    FILE *spiffs_file;
+    char *file_name;
+    MSG_PACK_ELEMENT *temp;
+    int nwrite;
+
     
     *msg_pack_number = 0;
+ 
 
-    //FILE *spiffs_file;
     
-    char *file_name;
+    
+    
     
     file_name = malloc(size);
     memset(file_name,0,sizeof(size));
-    strcat(file_name,"/spiffs/");
+
     msgpack_block_init(&cmpr,msg_data, msg_data_size);
     
     size -= strlen(file_name);
@@ -242,50 +253,235 @@ static bool file_write(int *msg_pack_number,
         
     }
     
-    printf("file name found %s %d \n\n",file_name,size);
+    //printf("file name found %s %d \n\n",file_name,size);
     if( msgpack_block_find_object(&cmpr,"FILE_DATA", &temp_pointer, &temp_length) != true)
     {
        printf("file data not found \n");
        return false;
         
     }
-    printf("file_data found %d \n",temp_length);
-    
-   
-    
-   
-#if 0
+    //printf("file_data found %d \n",temp_length);
     spiffs_file = fopen(file_name,"wb");
-    nwrite = fwrite(buffer,1,data_size,to_fp);
-    temp = malloc(sizeof(MSG_PACK_ELEMENT)*5);
-    *msg_pack = temp;
-    *msg_pack_number = pack_elements;
-    msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
-    msg_dict_pack_string(&temp[1],"COMMAND", "FILE_DIR");
-    msg_dict_pack_map(&temp[2],"DATA",2);
-    msg_dict_pack_string_dynamic(&temp[3],"FILE_NAME", file_name);
-    msg_dict_pack_unsigned_integer(&temp[4],"BYTES_WROTE", nwrite);
-    return true;
-#endif
+    
+    if(spiffs_file != NULL)
+    {
+      nwrite = fwrite(temp_pointer,1,temp_length,spiffs_file);
+      //printf("nwrite %d \n",nwrite);
+      temp = malloc(sizeof(MSG_PACK_ELEMENT)*5);
+      *msg_pack = temp;
+      *msg_pack_number = 5;
+      msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+      msg_dict_pack_string(&temp[1],"COMMAND", "FILE_WRITE");
+      msg_dict_pack_map(&temp[2],"DATA",2);
+      msg_dict_pack_string_dynamic(&temp[3],"FILE_NAME", file_name);
+      msg_dict_pack_unsigned_integer(&temp[4],"BYTES_WROTE", nwrite);
+      fclose(spiffs_file);
+     return true;
+    }
     return false;
-}
+}    
+   
+
 static bool file_read(int *msg_pack_number, 
                           MSG_PACK_ELEMENT **msg_pack, 
                           char* msg_data, 
                           int msg_data_size  )
 {
+    
+    CMP_READ_BLOCK_T cmpr;
+    uint32_t size;
+    char *data_ptr;
+    uint32_t data_length;
+    FILE *spiffs_file;
+    char *file_name;
+    MSG_PACK_ELEMENT *temp;
+    int nread;
+
+    
+    *msg_pack_number = 0;
+ 
+
+    
+    
+    
+    
+    file_name = malloc(FILE_SIZE);
+    memset(file_name,0,sizeof(size));
+    size = FILE_SIZE;
+    data_ptr = malloc(DATA_SIZE);
+    memset(data_ptr,0,DATA_SIZE);
+    data_length = DATA_SIZE;
+    
+    msgpack_block_init(&cmpr,msg_data, msg_data_size);
+    
+    
+    printf("file read \n");
+    if( msgpack_block_find_string(&cmpr,"FILE_NAME", file_name, &size) != true )
+    {
+       printf("file name not found \n");
+       return false;
+        
+    }
+    
+
+    spiffs_file = fopen(file_name,"rb");
+    
+    if(spiffs_file != NULL)
+    {
+      nread = fread(data_ptr,1,data_length,spiffs_file);
+      printf("nread %d \n",nread);
+      temp = malloc(sizeof(MSG_PACK_ELEMENT)*5);
+      *msg_pack = temp;
+      *msg_pack_number = 5;
+      msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+      msg_dict_pack_string(&temp[1],"COMMAND", "FILE_READ");
+      msg_dict_pack_map(&temp[2],"DATA",2);
+      msg_dict_pack_string_dynamic(&temp[3],"FILE_NAME", file_name);
+      msg_dict_pack_binary_dynamic(&temp[4],"FILE_DATA", data_ptr,nread);
+
+      fclose(spiffs_file);
+     return true;
+    }
     return false;
-}
+}    
+
+
 static bool file_delete(int *msg_pack_number, 
                           MSG_PACK_ELEMENT **msg_pack, 
                           char* msg_data, 
                           int msg_data_size  )
 {
-    return false;
-}
+    
+    CMP_READ_BLOCK_T cmpr;
+    uint32_t size;
+    
+    char *file_name;
+    MSG_PACK_ELEMENT *temp;
+    
+    bool status;
+
+    
+    *msg_pack_number = 0;
+ 
+
+    
+    
+    
+    
+    file_name = malloc(FILE_SIZE);
+    memset(file_name,0,sizeof(size));
+    size = FILE_SIZE;
+    
+    
+    msgpack_block_init(&cmpr,msg_data, msg_data_size);
+    
+    
+    printf("file read \n");
+    if( msgpack_block_find_string(&cmpr,"FILE_NAME", file_name, &size) != true )
+    {
+       printf("file name not found \n");
+       return false;
+        
+    }
+    
+
+    
+    status = false;
+    
+    
+    if( remove(file_name) == 0)
+    {
+        status = true;
+    }        
+    
+    temp = malloc(sizeof(MSG_PACK_ELEMENT)*5);
+    *msg_pack = temp;
+    *msg_pack_number = 5;
+    msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+    msg_dict_pack_string(&temp[1],"COMMAND", "FILE_DELETE");
+    msg_dict_pack_map(&temp[2],"DATA",2);
+    msg_dict_pack_string_dynamic(&temp[3],"FILE_NAME", file_name);
+    msg_dict_pack_unsigned_integer(&temp[4],"STATUS", status);
+
+    return true;
+ 
+}    
 
 
-static int count_spiffs_directory(void )
+static bool file_rename( int *msg_pack_number, 
+                         MSG_PACK_ELEMENT **msg_pack,                                                 
+                         char* msg_data, 
+                        int msg_data_size  )
+                        {
+    
+    CMP_READ_BLOCK_T cmpr;
+    uint32_t to_size;
+    uint32_t from_size;
+    
+    char *from_name;
+    char *to_name;
+    MSG_PACK_ELEMENT *temp;
+    
+    bool status;
+
+    
+    *msg_pack_number = 0;
+ 
+
+    
+    
+    
+    from_size = FILE_SIZE;
+    from_name = malloc(FILE_SIZE);
+    memset(from_name,0,from_size);
+    to_size = FILE_SIZE;   
+    to_name = malloc(FILE_SIZE);
+    memset(to_name,0,to_size);
+    
+    
+    msgpack_block_init(&cmpr,msg_data, msg_data_size);
+    
+    
+    printf("file read \n");
+    if( msgpack_block_find_string(&cmpr,"TO_NAME", to_name, &to_size) != true )
+    {
+       printf("to name not found \n");
+       return false;
+        
+    }
+    if( msgpack_block_find_string(&cmpr,"FROM_NAME", from_name, &from_size) != true )
+    {
+       printf("to name not found \n");
+       return false;
+        
+    }
+     
+
+    
+    status = false;
+    
+    
+    if( rename(from_name, to_name) == 0)
+    {
+        status = true;
+    }        
+    
+    temp = malloc(sizeof(MSG_PACK_ELEMENT)*6);
+    *msg_pack = temp;
+    *msg_pack_number = 6;
+    msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");
+    msg_dict_pack_string(&temp[1],"COMMAND", "FILE_RENAME");
+    msg_dict_pack_map(&temp[2],"DATA",2);
+    msg_dict_pack_string_dynamic(&temp[3],"TO_NAME", to_name);
+   msg_dict_pack_string_dynamic(&temp[4],"FROM_NAME", from_name);
+    msg_dict_pack_unsigned_integer(&temp[5],"STATUS", status);
+
+    return true;
+ 
+}    
+
+
+static int count_directory(char *file_mount )
 { 
   
    struct dirent *de;  // Pointer for directory entry
@@ -295,17 +491,17 @@ static int count_spiffs_directory(void )
    
    count = 0;
   
-   dr   = opendir("/spiffs/");
+   dr   = opendir(file_mount);
    if (dr == NULL)  // opendir returns NULL if couldn't open directory
    {
         printf("Could not open current directory \n" );
-        abort(); // already been opend once
+        return -1;
    }
    
   while ((de = readdir(dr)) != NULL)
   {
             count += 1;
-            printf("name %s\n", de->d_name);
+            //printf("name %s\n", de->d_name);
             
            
   }
@@ -314,28 +510,34 @@ static int count_spiffs_directory(void )
     
 }    
 
-static int list_spiffs_directory(int max_count, MSG_PACK_ELEMENT *element )
+static int list_directory(int max_count, MSG_PACK_ELEMENT *element, char *file_mount )
 { 
   
    struct dirent *de;  // Pointer for directory entry
    DIR *dr;
    int count;
+   char *file_name;
+   int file_length;
    
    
    count = 0;
   
-   dr   = opendir("/spiffs/");
+   dr   = opendir(file_mount);
    if (dr == NULL)  // opendir returns NULL if couldn't open directory
    {
         printf("Could not open current directory \n" );
-        abort(); // already been opend once
+       return -1;
    }
    
   while ((de = readdir(dr)) != NULL)
   {
             count += 1;
-            printf("name %s\n", de->d_name);
-            msg_dict_pack_string(element,NULL, de->d_name);
+            //printf("name %s\n", de->d_name);
+            file_length = strlen(de->d_name)+4;
+            file_name = malloc(file_length);
+            memset(file_name,0,file_length);
+            strcpy(file_name,de->d_name);
+            msg_dict_pack_string_dynamic(element,NULL,file_name);
             element++;
            
             if(count >= max_count)
@@ -349,17 +551,39 @@ static int list_spiffs_directory(int max_count, MSG_PACK_ELEMENT *element )
     
 }  
 
-static bool file_directory(int *msg_pack_number, 
+static bool file_directory(
+                          int *msg_pack_number, 
                           MSG_PACK_ELEMENT **msg_pack, 
                           char* msg_data, 
                           int msg_data_size  )
 {
+    CMP_READ_BLOCK_T cmpr;
+   
     MSG_PACK_ELEMENT *temp;
     int pack_elements;
     int file_elements;
+    char *file_mount;
+    uint32_t size;
+    
+    file_mount = malloc(FILE_MOUNT_SIZE+1);
+    memset(file_mount, 0, FILE_MOUNT_SIZE+1);
+    size = FILE_MOUNT_SIZE;
+ 
+    msgpack_block_init(&cmpr,msg_data, msg_data_size);
+   
+
+    if( msgpack_block_find_string(&cmpr,"FILE_MOUNT", file_mount, &size) != true )
+    {
+       printf("directory name not found \n");
+       return false;
+        
+    }
+    
+  
    
    
-   file_elements =  count_spiffs_directory();
+   file_elements =  count_directory(file_mount);
+   if( file_elements <0){ return false; }
    pack_elements = file_elements +3;
    temp = malloc(sizeof(MSG_PACK_ELEMENT)*pack_elements);
    *msg_pack = temp;
@@ -369,7 +593,7 @@ static bool file_directory(int *msg_pack_number,
    msg_dict_pack_string(&temp[1],"COMMAND", "FILE_DIR");
  
    msg_dict_pack_array(&temp[2],"DATA", file_elements);
-   list_spiffs_directory(file_elements, &temp[3] );
+   list_directory(file_elements, &temp[3],file_mount );
    return true;
 }
 
@@ -392,6 +616,10 @@ static bool heap_space(int *msg_pack_number,
 {
     
    MSG_PACK_ELEMENT *temp;
+   
+   
+   
+   
    
    temp = malloc(sizeof(MSG_PACK_ELEMENT)*3);
    *msg_pack = temp;

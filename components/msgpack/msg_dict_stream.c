@@ -175,7 +175,7 @@ static int find_map_number( int number, MSG_PACK_ELEMENT *msg_pack )
       switch(msg_pack->type)
       {
         case MSGPACK_MAP_TYPE:
-          map_number -= msg_pack->size*2;
+          map_number -= msg_pack->size;
         break;
 
 

@@ -1,4 +1,4 @@
-bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,int *skip_number, int *size) 
+bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,uint32_t *skip_number, uint32_t *size) 
 {
   uint8_t type_marker = 0;
   *size = 0;

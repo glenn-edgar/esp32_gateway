@@ -13,47 +13,60 @@ static char *buffer_ptr;
 static int read_index;
 
 #define check_return(return_value )\
-    if(return_value != true){ return false; }
- 
+    if(return_value != true){ return false;} 
+    
 static void block_reset_buffer(CMP_READ_BLOCK_T *cmpr);
 static char *cmp_skip_function(struct cmp_ctx_s *ctx,  void *data, size_t count);
 static bool   cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_read);
 static void dump_buffer(int size);
 
+
+static bool  msgpack_block_scoop_field(cmp_ctx_t  *ctx, void **data, uint32_t *size);
+static bool   msgpack_block_skip_field(cmp_ctx_t *ctx);
+
 bool msgpack_block_find_object(CMP_READ_BLOCK_T *cmpr,char *field_name, char **buffer, uint32_t *buffer_size)
 {
      bool return_value;
      cmp_ctx_t *ctx;
-     char *temp_pointer;
-     uint32_t   temp_size;
-
-    
+     char *temp_pointer = NULL;
+     uint32_t   temp_size =0;
+     uint32_t   map_size;
+  
+    *buffer_size = 0;
     ctx = &cmpr->ctx;
     block_reset_buffer(cmpr);
     dump_buffer(1000);
     cmp_init(ctx, NULL, cmp_reader_function, cmp_skip_function, NULL);
-    while(1)
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+   
+
+   
+    for(int i = 0;i < map_size; i++)
     { 
+
        dump_buffer(1000);
        return_value =  msgpack_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
        dump_buffer(1000);
        check_return(return_value);
+
        if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
        {
            dump_buffer(1000);
-           return_value = msgpack_scoop_field(ctx,(void **)buffer,buffer_size);
-           
+           return_value = msgpack_block_scoop_field(ctx,(void **)buffer,buffer_size);
+           dump_buffer(1000);
            return return_value;
            
            
        }
-           
-       msgpack_skip_field(ctx); 
-        
+   
+       msgpack_block_skip_field(ctx); 
+  
         
     }
+    
     return false;
 }    
+
 
 bool msgpack_block_find_string(CMP_READ_BLOCK_T *cmpr,char *field_name, char *string, uint32_t *size )
 {
@@ -87,13 +100,13 @@ bool msgpack_block_find_string(CMP_READ_BLOCK_T *cmpr,char *field_name, char *st
            
        }
        
-       msgpack_skip_field(ctx); 
+       msgpack_block_skip_field(ctx); 
             
     } 
     return false;
 }
-    
-    
+
+
 static void block_reset_buffer(CMP_READ_BLOCK_T *cmpr)
 {
    read_index = 0;
@@ -117,6 +130,7 @@ static void dump_buffer( int size)
     memset(hex_buffer,0,hex_size+1);
     binary_to_hex(buffer_ptr,size, hex_buffer);
     printf("dumping remaining part of buffer size %d \n",size);
+    printf("\n\n+++++++++++++++++\n");
     printf(hex_buffer);
     printf("\n\n---\n");
     free(hex_buffer);
@@ -166,7 +180,77 @@ static char *cmp_skip_function(struct cmp_ctx_s *ctx,  void *data, size_t count)
 }
 
 
+static bool   msgpack_block_skip_field(cmp_ctx_t *ctx)
+{
+    bool return_value;
+    cmp_object_t obj;
+    uint32_t          size;
+    uint32_t          number_to_skip = 1;
+    
+    return_value = true;
+    
+    while((number_to_skip > 0) && (return_value == true))
+    {
+        
+        number_to_skip -= 1;
+        return_value = analyize_current_object(ctx, &obj, &number_to_skip, &size);
+        
+        if( return_value == true)
+        {
+            ctx->skip( NULL,NULL, size ); 
+      
+        }
+    }
+    
+    return return_value;
+    
+}
 
+static bool  msgpack_block_scoop_field(cmp_ctx_t  *ctx, void **data, uint32_t *size)
+{
+    bool return_value;
+    cmp_object_t obj;
+   
+    uint32_t    number_to_skip = 1;
+   
+    uint32_t    temp_size;
+    uint32_t    temp_data_size =0;
+    
+    
+    number_to_skip -= 1;
+    *data = buffer_ptr;
+    
+    return_value = analyize_current_object(ctx, &obj, &number_to_skip, &temp_size);
+    
+    if( return_value == true)
+    {
+          ctx->skip( NULL,NULL,temp_size );   
+    }
+    if(return_value == false){return false; }
+    return_value = true;
+    while((number_to_skip > 0) && (return_value == true))
+    {
+        number_to_skip -= 1;
+        return_value = analyize_current_object(ctx, &obj, &number_to_skip, &temp_size);
+        temp_data_size += temp_size;
+        if( return_value == true)
+        {
+            ctx->skip( NULL,NULL, temp_size );   
+        }
+        else
+        {
+            return false;
+        }
+       
+    }
+    
+    
+   *size = buffer_ptr - (char *)*data;
+    
+    return return_value;
+    
+    
+}
 
 
 

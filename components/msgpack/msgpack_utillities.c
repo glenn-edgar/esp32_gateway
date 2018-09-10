@@ -16,7 +16,7 @@ static int read_index;
 
 static bool   cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t number_to_read);
 static char *cmp_skip_function(struct cmp_ctx_s *ctx,  void *data, size_t count);
-bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,uint32_t *skip_num, uint32_t *size); 
+
 static char cmp_peak(void);
 
 void reset_buffer(void)
@@ -116,32 +116,41 @@ bool  msgpack_scoop_field(cmp_ctx_t  *ctx, void **data, uint32_t *size)
     cmp_object_t obj;
    
     uint32_t    number_to_skip = 1;
-    char        *reference_point;
+   
+    uint32_t    temp_size;
+    uint32_t    temp_data_size =0;
     
     
     number_to_skip -= 1;
-    reference_point = buffer_ptr;
-    return_value = analyize_current_object(ctx, &obj, &number_to_skip, size);
+    *data = buffer_ptr;
+    
+    return_value = analyize_current_object(ctx, &obj, &number_to_skip, &temp_size);
     
     if( return_value == true)
     {
-          ctx->skip( NULL,NULL, *size );   
+          ctx->skip( NULL,NULL,temp_size );   
     }
     if(return_value == false){return false; }
     return_value = true;
     while((number_to_skip > 0) && (return_value == true))
     {
         number_to_skip -= 1;
-        return_value = analyize_current_object(ctx, &obj, &number_to_skip, size);
-        
+        return_value = analyize_current_object(ctx, &obj, &number_to_skip, &temp_size);
+        temp_data_size += temp_size;
         if( return_value == true)
         {
-            ctx->skip( NULL,NULL, *size );   
+            ctx->skip( NULL,NULL, temp_size );   
         }
+        else
+        {
+            return false;
+        }
+        
     }
-    *size = buffer_ptr-reference_point;
-    *data = reference_point;
     
+    
+   *size = buffer_ptr - (char *)*data;
+    printf("size is %d temp_data_size %d\n",*size,temp_data_size);
     return return_value;
     
     
@@ -170,6 +179,7 @@ static bool   cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t numb
         
     }
     read_index += number_to_read;
+
     return true;
     
 }   
@@ -183,11 +193,13 @@ static char *cmp_skip_function(struct cmp_ctx_s *ctx,  void *data, size_t count)
    char *return_value;
    return_value = buffer_ptr;
    read_index = read_index +count;
+   
    if( read_index > buffer_size)
    {
-       read_index = buffer_size;
+       abort(); //read_index = buffer_size;
    }
    buffer_ptr = buffer + read_index;
+   
    return return_value;
     
 }

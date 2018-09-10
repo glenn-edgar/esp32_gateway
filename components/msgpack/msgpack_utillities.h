@@ -21,4 +21,5 @@ bool msgpack_skip_field(cmp_ctx_t *ctx);
 
 bool  msgpack_scoop_field(cmp_ctx_t *ctx, void **data, uint32_t *size);
 
+bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,uint32_t *skip_number, uint32_t *size);
 #endif
