@@ -18,8 +18,6 @@ bool msg_command_process_packet(int *msg_pack_number,
 
 
 
-int msg_command_command_number(void);
-char *msg_command_list_cmd_name(int index);
 
 
 #endif

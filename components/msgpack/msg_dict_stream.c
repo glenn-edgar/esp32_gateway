@@ -6,29 +6,31 @@
 
 
 
-static char *current_buffer = NULL;
-static int buffer_size = 0;
-static char *buffer;
 
-static void add_zero(void);
-static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack );
+
+
+static int allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack );
 static int find_map_number(int number, MSG_PACK_ELEMENT *msg_pack );
-static bool reader(struct cmp_ctx_s *ctx, void *data, size_t number_to_read );
-static size_t writer(struct cmp_ctx_s *ctx, const void *data, size_t count );
-static char * skipper(struct cmp_ctx_s *ctx, void *data, size_t number_to_read );
 
 
+
+
+
+static void msgpack_dict_stream_init(cmp_ctx_t *ctx, char *write_buffer, int write_size);
 
 char * msg_dict_stream(  int *buff_size, int number,  MSG_PACK_ELEMENT *msg_pack)
 
 {
   cmp_ctx_t ctx;
   int map_number;
+  int output_size;
+  
+  char *output_buffer;
   
   map_number = find_map_number(number,msg_pack);
-  allocate_buffer( number, msg_pack );
- 
-  cmp_init(&ctx, buffer,reader, skipper, writer);   
+  output_size = allocate_buffer( number, msg_pack );
+  output_buffer = malloc(output_size);
+  msgpack_dict_stream_init(&ctx, output_buffer, output_size); 
    
   cmp_write_map(&ctx,map_number);
  
@@ -86,9 +88,18 @@ char * msg_dict_stream(  int *buff_size, int number,  MSG_PACK_ELEMENT *msg_pack
            break;
            
        case MSGPACK_ARRAY_TYPE:
-              
               cmp_write_array(&ctx, msg_pack->size);
              break;
+             
+        case  MSGPACK_BOOLEAN_TYPE:
+             cmp_write_bool(&ctx,msg_pack->data.integer); 
+             break;             
+        
+       case MSGPACK_NULL_TYPE :     
+             cmp_write_nil(&ctx);
+            break;
+            
+       
        default:
        
          abort();
@@ -97,15 +108,14 @@ char * msg_dict_stream(  int *buff_size, int number,  MSG_PACK_ELEMENT *msg_pack
     
            
   }
-  add_zero();
-  *buff_size = (current_buffer-buffer);
+  *buff_size = ctx.ctx_buf_ctl.index;
   
-  return buffer;
+  return output_buffer;
 }  
     
     
 
-static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
+static int allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
 {
     int size =0;
    
@@ -146,19 +156,18 @@ static void allocate_buffer( int number, MSG_PACK_ELEMENT *msg_pack )
            break; 
        
        case MSGPACK_ARRAY_TYPE:
-           size += 6;       
+           size += 6;  
+           break;
+
+       case  MSGPACK_BOOLEAN_TYPE:
+       case MSGPACK_NULL_TYPE :
+           size += 1;
+           break;           
       }
       msg_pack++;
     }
-    
-    buffer= malloc(size+2);// +2 for crc
-    if(buffer == NULL)
-    {
-        abort();
-    }
-    buffer_size = size;
-    current_buffer = buffer;
-    
+    size = size +2; //for crc
+    return size;
     
     
 }
@@ -183,7 +192,7 @@ static int find_map_number( int number, MSG_PACK_ELEMENT *msg_pack )
        case MSGPACK_ARRAY_TYPE:
           map_number -= msg_pack->size;
         break;
-        
+  
         default:
            break;
       
@@ -193,38 +202,37 @@ static int find_map_number( int number, MSG_PACK_ELEMENT *msg_pack )
     
     return map_number;
 }
-static bool reader(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
-{
-   abort(); // should not happen
-    
-}
+
+
+
+
 
 //typedef size_t (*cmp_writer)(struct cmp_ctx_s *ctx, const void *data,size_t count);
-static size_t writer(struct cmp_ctx_s *ctx, const void *data, size_t count )
+static size_t write_function(struct cmp_ctx_s *ctx, const void *data, size_t count )
 {
     
-    if((current_buffer+count)>= buffer +buffer_size)
+    if((ctx->ctx_buf_ctl.current_pointer+count)>= (ctx->ctx_buf_ctl.buffer +ctx->ctx_buf_ctl.size))
     {
-       abort(); 
+       count = ctx->ctx_buf_ctl.buffer +ctx->ctx_buf_ctl.size-ctx->ctx_buf_ctl.current_pointer;
     }
-    memcpy(current_buffer,data,count);
-    current_buffer += count;
-    
+    memcpy(ctx->ctx_buf_ctl.current_pointer,data,count);
+    ctx->ctx_buf_ctl.current_pointer += count;
+    ctx->ctx_buf_ctl.index += count;
     return count;
     
 }
 
 
 
-//typedef char * (*cmp_skip)(struct cmp_ctx_s *ctx,  void *data,size_t count);
-static char * skipper(struct cmp_ctx_s *ctx, void *data, size_t number_to_read )
-{
 
-    
-    abort(); // should not happen
-    
-}
-static void add_zero(void)
+
+
+static void msgpack_dict_stream_init(cmp_ctx_t *ctx, char *write_buffer, int write_size)
 {
-    *current_buffer = 0;
+    ctx->ctx_buf_ctl.buffer = write_buffer;
+    ctx->ctx_buf_ctl.current_pointer = write_buffer;
+    ctx->ctx_buf_ctl.index = 0;
+    ctx->ctx_buf_ctl.size = write_size; 
+    cmp_init( ctx, (void *)ctx, NULL,NULL, write_function );
+    
 }

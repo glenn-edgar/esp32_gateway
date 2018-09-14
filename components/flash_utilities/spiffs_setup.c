@@ -63,3 +63,32 @@ bool initialize_spiffs(void)
     return return_value;
     
 }
+
+int format_spiffs_drive(void)
+{
+    
+   int error_code;
+  
+  
+   esp_vfs_spiffs_conf_t conf = {
+      .base_path = "/spiffs",
+      .partition_label = NULL,
+      .max_files = 5,
+      .format_if_mount_failed = true
+    };
+   if ( esp_spiffs_mounted(NULL) != false )
+   {
+       
+       error_code = esp_vfs_spiffs_unregister(NULL);
+       
+   } 
+   error_code = esp_spiffs_format(NULL);
+   //printf("error code spiffs %d \n",error_code);
+   error_code = esp_vfs_spiffs_register(&conf);
+    //printf("error coderegister %d \n",error_code);
+    // Use settings defined above to initialize and mount SPIFFS filesystem.
+    // Note: esp_vfs_spiffs_register is an all-in-one convenience function.   
+    return error_code;
+}   
+    
+   

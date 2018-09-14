@@ -10,6 +10,8 @@ typedef enum {MSGPACK_INT_TYPE = 0,
                MSGPACK_BIN_TYPE = 4,
                MSGPACK_ARRAY_TYPE = 5,
                MSGPACK_MAP_TYPE = 6,
+               MSGPACK_BOOLEAN_TYPE = 7,
+               MSGPACK_NULL_TYPE = 8,
                } MSG_TYPE;
  
 
@@ -115,6 +117,22 @@ static inline void msg_dict_pack_map(MSG_PACK_ELEMENT *element,char *field_name,
     element->field_name = field_name;
     element->type = MSGPACK_MAP_TYPE;
     element->size = map_size;
+    element->malloc_flag = false;       
+}
+
+static inline void msg_dict_pack_null(MSG_PACK_ELEMENT *element,char *field_name)
+{
+    element->field_name = field_name;
+    element->type = MSGPACK_NULL_TYPE;
+    element->size = 0;
+    element->malloc_flag = false;       
+}
+static inline void msg_dict_pack_boolean(MSG_PACK_ELEMENT *element,char *field_name, int status)
+{
+    element->field_name = field_name;
+    element->data.integer = status;
+    element->type = MSGPACK_BOOLEAN_TYPE;
+    element->size = 0;
     element->malloc_flag = false;       
 }
 

@@ -38,6 +38,12 @@ void wdt_task_subscribe(void)
     
 }
 
+void wdt_task_unsubscribe(void)
+{
+    
+    esp_task_wdt_delete(xTaskGetCurrentTaskHandle());
+}
+
 void wd_task_status(void)
 {
     

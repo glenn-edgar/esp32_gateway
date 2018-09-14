@@ -21,7 +21,7 @@
 
 #include "driver/uart.h"
 #include "rom/uart.h"
-#include "flash/flash_setup.h"
+#include "flash_setup.h"
 #include "sd_card.h"
 #include "message_processor.h"
 
@@ -96,7 +96,7 @@ void app_main(void)
 
 #if _ENABLE_WATCHDOG_ 
     printf("current task handle %p\n",xTaskGetCurrentTaskHandle());
-    initialize_watchdog(3, true);
+    initialize_watchdog(5, true);
     wdt_task_subscribe();
 
 #endif

@@ -92,12 +92,21 @@ union cmp_object_data_u {
   cmp_ext_t ext;
 };
 
+typedef struct
+{
+   char   *buffer;
+   char   *current_pointer; 
+   int    index;   
+   int    size;
+}CTX_BUF_CTL;
+   
 typedef struct cmp_ctx_s {
   uint8_t     error;
   void       *buf;
   cmp_reader  read;
   cmp_writer  write;
   cmp_skip    skip;
+  CTX_BUF_CTL  ctx_buf_ctl;
 } cmp_ctx_t;
 
 typedef struct cmp_object_s {

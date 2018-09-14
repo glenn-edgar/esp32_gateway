@@ -12,7 +12,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "sd_card.h"
-#include "../spiffs_setup.h"
+#include "spiffs_setup.h"
 #include <dirent.h>
 
 

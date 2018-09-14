@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "msgpack_utillities.h"
+#include "msgpack_rx_handler.h"
 #include "msg_command_cmd_table.h"
 
 
@@ -90,7 +90,7 @@ PROCESS_COMMAND_T msg_command_find_command(char *command_name, uint32_t command_
             break;
         }
        
-        if( ctx_strcmp(command_table[i].command_name, command_name,command_size) == true )
+        if( ctx_strcmp( command_table[i].command_name, command_name,command_size) == true )
         {
             
             return_value = command_table[i].process_command;

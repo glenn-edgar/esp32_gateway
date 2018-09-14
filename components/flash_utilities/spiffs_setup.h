@@ -3,7 +3,7 @@
 
 char *spiffs_get_prefix(void);
 bool initialize_spiffs(void);
-
+int format_spiffs_drive(void);
 
 
 #endif

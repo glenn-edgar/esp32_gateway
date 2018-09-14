@@ -10,6 +10,7 @@
 
 #include "hexadecimal.h"
 #include "message_processor.h"
+#include "msg_process_builtin_cmds.h"
 
 static SemaphoreHandle_t xSemaphore = NULL;
 
