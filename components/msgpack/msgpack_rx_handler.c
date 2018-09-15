@@ -6,7 +6,7 @@
 #include "hexadecimal.h"
 #include "msgpack_rx_handler.h"
 
-
+#define FILE_NAME_SIZE 32
 
 
 bool analyize_current_object(cmp_ctx_t *ctx, cmp_object_t *obj,uint32_t *skip_number, uint32_t *size);
@@ -15,6 +15,42 @@ static bool   cmp_reader_function(struct cmp_ctx_s *ctx, void *data, size_t numb
 static void reset_buffer(cmp_ctx_t *ctx);
 static char *cmp_return_current_buffer(struct cmp_ctx_s *ctx);
 
+
+bool msgpack_rx_handler_file(cmp_ctx_t *ctx,char *filename, char **buffer,uint32_t *buffer_size )
+{
+    
+   
+    char *temp_ptr;
+    FILE *file_handle;
+    char *file_buffer;
+    
+    file_buffer = malloc(FILE_NAME_SIZE);
+    strcpy( file_buffer, filename);
+    
+    file_handle = fopen(file_buffer,"rb");
+    free(file_buffer);
+    
+    if(file_handle == NULL)
+    {
+        
+        return false;
+       
+    }
+    
+    temp_ptr = malloc(*buffer_size);
+    *buffer_size = fread(temp_ptr,1,*buffer_size,file_handle);
+    fclose(file_handle);
+    *buffer = temp_ptr;
+    if(*buffer_size <= 0)
+    {
+        fclose(file_handle);
+        free(temp_ptr);
+        return false;
+    }
+    fclose(file_handle);
+    msgpack_rx_handler_init(ctx, temp_ptr, *buffer_size);
+    return true;
+}
 
 void msgpack_rx_handler_init(cmp_ctx_t *ctx, char *read_buffer, int read_size)
 {
@@ -85,7 +121,7 @@ bool msgpack_rx_handler_find_string(cmp_ctx_t *ctx,char *field_name, char *strin
     
     
     if( cmp_read_map(ctx, &map_size) != true) {return false;}
-   
+  
     
     for(int i = 0;i < map_size; i++)
     {  

@@ -42,7 +42,7 @@
 #include "tcpip_adapter.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
-#include "msg_file_dict.h"
+#include "msgpack_rx_handler.h"
 
 // #include "eth_phy/phy_lan8720.h"
 #include "olimex_lan8710.h"
@@ -61,6 +61,8 @@ char hostname[32];
             }                                                          \
 })
 
+static bool find_host_name(void);
+
 static void eth_gpio_config_rmii(void)
 {
     // RMII data pins are fixed:
@@ -78,9 +80,9 @@ static void eth_gpio_config_rmii(void)
 void initEthernet(void)
 {
     printf("Initialize ETHERNET\n"); 
-    msgpack_load_buffer("WIFI.MPK");
-    msgpack_find_field( "hostname", hostname, sizeof(hostname) );
-    msgpack_close_buffer();
+    
+   
+    if( find_host_name() == false){ return; } // no host name
 
     eth_config_t config = phy_lan8710_default_ethernet_config;
   
@@ -104,3 +106,30 @@ void initEthernet(void)
     tcpip_adapter_set_hostname(ESP_IF_ETH, hostname);
 
 }
+
+static bool find_host_name(void)
+{
+    bool ret;
+    char     *buffer;
+    uint32_t  buffer_size;
+    
+    cmp_ctx_t ctx;
+    
+    buffer_size = 256;
+    ret = msgpack_rx_handler_file(&ctx,"/spiffs/WIFI.MPK",&buffer,&buffer_size );
+    if(ret == false)
+    {
+        return false;
+    }
+ 
+    buffer_size = sizeof(hostname);
+    ret = msgpack_rx_handler_find_string( &ctx,"hostname", hostname, &buffer_size );
+
+
+    
+
+    free(buffer);
+    return ret;
+}
+
+

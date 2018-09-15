@@ -33,15 +33,15 @@ void flash_initialize_flash(void )
       ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    
-    
+    printf("flash initialization *&&&&&&&&&&&&&&&&&&&&&&&&&&&& %d \n",ret);    
+#if 0   
     if(is_sd_card_mounted() == true )
     {
       transfer_files() ; 
         
         
     }        
-    
+#endif    
     
     
     

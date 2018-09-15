@@ -11,7 +11,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "wifi_station_setup.h"
-#include "msg_file_dict.h"
+#include "msgpack_rx_handler.h"
 
 static esp_err_t event_handler(void *ctx, system_event_t *event);
 
@@ -46,19 +46,19 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         esp_wifi_connect();
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
-        ESP_LOGI(TAG, "got ip:%s",
-                 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+        //ESP_LOGI(TAG, "got ip:%s",
+        //         ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
         break;
     case SYSTEM_EVENT_AP_STACONNECTED:
-        ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
-                 MAC2STR(event->event_info.sta_connected.mac),
-                 event->event_info.sta_connected.aid);
+        //ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
+        //         MAC2STR(event->event_info.sta_connected.mac),
+          //       event->event_info.sta_connected.aid);
         break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
-        ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d",
-                 MAC2STR(event->event_info.sta_disconnected.mac),
-                 event->event_info.sta_disconnected.aid);
+        //ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d",
+        //         MAC2STR(event->event_info.sta_disconnected.mac),
+         //        event->event_info.sta_disconnected.aid);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         esp_wifi_connect();
@@ -76,35 +76,46 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 void wifi_init_sta(void)
 {
     bool ret;
+    char     *buffer;
+    uint32_t  buffer_size;
     wifi_setup_status = false;
-    ret = msgpack_load_buffer("WIFI.MPK");
+    cmp_ctx_t ctx;
+    
+    buffer_size = 256;
+    
+    ret = msgpack_rx_handler_file(&ctx,"/spiffs/WIFI.MPK",&buffer,&buffer_size );
     if(ret == false)
     {
         return ;
     }
-    ret = msgpack_find_field( "ssid", ssid, sizeof(ssid) );
+   
+    buffer_size = sizeof(ssid);
+    ret = msgpack_rx_handler_find_string( &ctx,"ssid", ssid, &buffer_size );
     if(ret == false)
     {
-        msgpack_close_buffer();
-        return;
+        goto end;
+        
     }
-
-    ret = msgpack_find_field( "hostname", hostname, sizeof(hostname) );
+    
+    buffer_size = sizeof(hostname);
+    ret = msgpack_rx_handler_find_string( &ctx,"hostname", hostname, &buffer_size );
     if( ret == false )
     {
-        msgpack_close_buffer();
-        return;
+       goto end;
     }
-    ret = msgpack_find_field( "password", password, sizeof(hostname) );
+    
+    buffer_size = sizeof(hostname);
+    ret = msgpack_rx_handler_find_string(&ctx, "password", password, &buffer_size );
     if( ret == false)
     {
-        msgpack_close_buffer();
-        return;
+       goto end;
     }
-    msgpack_close_buffer();
+    
     wifi_event_group = xEventGroupCreate();
+
     strcpy((char*)wifi_config.sta.ssid, ssid );
     strcpy((char*)wifi_config.sta.password,password);
+
     tcpip_adapter_init();
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL) );
 
@@ -116,8 +127,10 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
     ESP_ERROR_CHECK( tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname ) );
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
+    printf( "wifi_init_sta finished.\n");
     wifi_setup_status = true;
+end:
+    free(buffer);
 }
 
 

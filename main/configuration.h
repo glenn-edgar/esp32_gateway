@@ -13,7 +13,7 @@ This file has defines which enable/disable subsystems
 #define _ENABLE_MOSQUITTO_ 0
 #define _ENABLE_GPIO_ 0
 #define _ENABLE_WATCHDOG_ 1
-#define _ENABLE_WIFI_ 0
+#define _ENABLE_WIFI_ 1
 #define _ENABLE_BLUETOOTH_ 0
 #define _ENABLE_ETHERNET_ 0
 

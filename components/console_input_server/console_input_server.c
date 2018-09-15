@@ -91,7 +91,7 @@ static void console_input_task( void * pvParameters )
     }    
      init_input_buffer();
    }
-   vTaskDelay(10 / portTICK_PERIOD_MS);
+   vTaskDelay(10/ portTICK_PERIOD_MS);
 
  }
 }

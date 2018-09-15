@@ -16,6 +16,7 @@ static SemaphoreHandle_t xSemaphore = NULL;
 
 bool console_output_server(void)
 {
+     
      vSemaphoreCreateBinary( xSemaphore );
      return true;
     
@@ -26,6 +27,7 @@ bool console_output(const char *format, ...)
     bool return_value;
     if( xSemaphoreTake( xSemaphore, ( TickType_t ) 10 ) == true )
     {
+       
         va_list args;
         va_start(args, format);
         return_value = vprintf(format, args);
@@ -51,6 +53,7 @@ bool console_output_structured_data(int number, MSG_PACK_ELEMENT *msg_pack)
    
     
     pack_buffer = msg_dict_stream( &pack_buffer_size,number,msg_pack);
+    
     return_value = console_output_binary_data("MSGPACK:",pack_buffer,pack_buffer_size);
     
 

@@ -5,6 +5,7 @@
 
 #include <esp_types.h>
 
+bool msgpack_rx_handler_file(cmp_ctx_t *ctx,char *filename, char **buffer,uint32_t *buffer_size );
 void ctx_dump_buffer( cmp_ctx_t  *ctx, int size);
 void msgpack_rx_handler_init(cmp_ctx_t *ctx, char *read_buffer, int read_size);
 
