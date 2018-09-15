@@ -53,6 +53,7 @@
 #include "spiffs_setup.h"
 #include "console_output_server.h"
 #include "console_input_server.h"
+#include "ble_custom_beacon.h"
 
 
                                 
@@ -92,7 +93,8 @@ void app_main(void)
     wifi_init_sta();
 #endif
 
-
+  ibeacon_custom_setup();
+  ibeacon_custom_start(1000,0x5555,0xaaaa);
 
 #if _ENABLE_WATCHDOG_ 
     printf("current task handle %p\n",xTaskGetCurrentTaskHandle());
