@@ -28,7 +28,7 @@
 
 #include "configuration.h"
 #include "gpio_heartbeat.h"
-#include "ibeacon_heartbeat.h"
+#include "serial_heartbeat.h"
 
 #if _ENABLE_ETHERNET_ 
 #include "ethernet/olimex_ethernet.h"
@@ -97,7 +97,7 @@ void app_main(void)
     initialize_watchdog(30, true);
     wdt_task_subscribe();
     
-   initialize_ibeacon_heart_beat();
+   initialize_serial_heart_beat();
       
 
     while(1)
