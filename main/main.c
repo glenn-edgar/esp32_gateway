@@ -27,6 +27,8 @@
 
 
 #include "configuration.h"
+#include "gpio_heartbeat.h"
+#include "serial_heartbeat.h"
 
 #if _ENABLE_ETHERNET_ 
 #include "ethernet/olimex_ethernet.h"
@@ -92,16 +94,17 @@ void app_main(void)
 #if _ENABLE_WIFI_
     wifi_init_sta();
 #endif
-
-  ibeacon_custom_setup();
-  ibeacon_custom_start(1000,0x5555,0xaaaa);
+ 
+  //ibeacon_custom_setup();
+  //ibeacon_custom_start(100,0x5555,0xaaaa);
 
 #if _ENABLE_WATCHDOG_ 
     printf("current task handle %p\n",xTaskGetCurrentTaskHandle());
-    initialize_watchdog(5, true);
+    initialize_watchdog(30, true);
     wdt_task_subscribe();
-
+    initialize_serial_heart_beat();
 #endif
+ initialize_gpio_heart_beat(21);
 #if _ENABLE_HEART_BEAT_
      heartbeat_toggle = 1;
      gpio_config_output_pin( HEART_BEAT );

@@ -39,6 +39,8 @@ adaption of espressif ibeacon demo
 #include "esp_gatt_defs.h"
 #include "esp_bt_main.h"
 #include "esp_bt_defs.h"
+#include "msgpack_rx_handler.h"
+#include "ble_custom_beacon.h"
 
 #include "freertos/FreeRTOS.h"
 
@@ -105,7 +107,6 @@ static esp_ble_ibeacon_vendor_t vendor_config = {
 
 
 
-
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 static void ble_ibeacon_appRegister(void);
 static void ble_ibeacon_init(void);
@@ -116,9 +117,34 @@ static esp_err_t esp_ble_config_ibeacon_data (esp_ble_ibeacon_vendor_t *vendor_c
 
 void ibeacon_custom_setup(void)
 {
- ; // TBD for now  
+    bool ret;
+    char     *buffer;
+    uint32_t  buffer_size;
     
+    cmp_ctx_t ctx;
+    char      ibuffer_name[17];
+    
+    buffer_size = 256;
+    
+    ret = msgpack_rx_handler_file(&ctx,"/spiffs/IBEACON.MPK",&buffer,&buffer_size );
+    if(ret == false)
+    {
+        return ;
+    }
+   
+    buffer_size = 17;
+    ret = msgpack_rx_handler_find_string( &ctx,"beacon_name", ibuffer_name, &buffer_size );
+    if(ret == false)
+    {
+        goto end;
+        
+    }
+    memcpy(vendor_config.proximity_uuid,ibuffer_name,16);
+ 
+end:
+    free(buffer);
 }
+
 
 
 void ibeacon_custom_stop(void)
