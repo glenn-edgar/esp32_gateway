@@ -149,7 +149,7 @@ end:
 
 void ibeacon_custom_stop(void)
 {
-    ESP_ERROR_CHECK(esp_bt_controller_disable());
+    esp_bt_controller_disable();
     
 }
 
@@ -179,8 +179,19 @@ void ibeacon_custom_start(int broadcast_interval_msec, uint16_t major, uint16_t 
 
 }
 
-
-
+void ibeacon_custom_change_numbers(uint16_t major, uint16_t minor)
+{
+    setup_major_minor(major,minor);
+    esp_ble_ibeacon_t ibeacon_adv_data;
+    esp_err_t status = esp_ble_config_ibeacon_data (&vendor_config, &ibeacon_adv_data);
+    if (status == ESP_OK){
+        esp_ble_gap_config_adv_data_raw((uint8_t*)&ibeacon_adv_data, sizeof(ibeacon_adv_data));
+    }
+    else {
+        printf("Config iBeacon data failed: %s\n", esp_err_to_name(status));
+    }    
+    
+}
 
 
 

@@ -9,6 +9,8 @@
 
 #include "watchdog.h"
 #include "console_output_server.h"
+#include "status_interface.h"
+#include "serial_heartbeat.h"
 
 static TaskHandle_t xHandle = NULL;
 
@@ -17,7 +19,7 @@ static TaskHandle_t xHandle = NULL;
 static void serial_heartbeat_task( void * pvParameters );
 void initialize_serial_heart_beat(void)
 {
-    
+    init_status_interface();
     xTaskCreate( serial_heartbeat_task, "SERIAL_HEART_BEAT",2000, NULL, 10, &xHandle );
     
 }
@@ -32,6 +34,7 @@ static void serial_heartbeat_task( void * pvParameters )
   for( ;; )
   {
    wdt_reset_task_time();
+   status = get_status_value();
    printf("high water stack mark %d \n",uxTaskGetStackHighWaterMark( NULL ));
    msg_dict_pack_string(&msg_pack[0],"TOPIC","HEART_BEAT");      
    msg_dict_pack_unsigned_integer(&msg_pack[1],"STATUS",status );
