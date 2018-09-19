@@ -17,6 +17,12 @@ bool msgpack_rx_handler_find_string(cmp_ctx_t *ctx,char *field_name, char *strin
 
 bool msgpack_rx_handler_find_object(cmp_ctx_t *ctx,char *field_name, char **buffer, uint32_t *buffer_size);
 
+bool msgpack_rx_handler_find_integer(cmp_ctx_t *ctx,char *field_name, int32_t *data );
+
+bool msgpack_rx_handler_find_unsigned(cmp_ctx_t *ctx,char *field_name, uint32_t *data );
+
+bool msgpack_rx_handler_find_binary(cmp_ctx_t *ctx,char *field_name, char *buffer, uint32_t *buffer_size);
+
 bool msgpack_rx_handler_get_bin_data_ptr(cmp_ctx_t *ctx ,void **data, uint32_t *size );
 
 bool msgpack_rx_handler_skip_field(cmp_ctx_t *ctx);

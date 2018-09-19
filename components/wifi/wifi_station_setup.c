@@ -48,6 +48,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     case SYSTEM_EVENT_STA_GOT_IP:
         //ESP_LOGI(TAG, "got ip:%s",
         //         ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+          wifi_setup_status =false;
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
         break;
     case SYSTEM_EVENT_AP_STACONNECTED:
@@ -62,6 +63,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         esp_wifi_connect();
+        wifi_setup_status =false;
         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
         break;
     default:
@@ -128,7 +130,7 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_wifi_start() );
     ESP_ERROR_CHECK( tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname ) );
     printf( "wifi_init_sta finished.\n");
-    wifi_setup_status = true;
+   
 end:
     free(buffer);
 }
