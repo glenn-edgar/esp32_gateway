@@ -48,7 +48,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     case SYSTEM_EVENT_STA_GOT_IP:
         //ESP_LOGI(TAG, "got ip:%s",
         //         ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-          wifi_setup_status =false;
+          wifi_setup_status =true;
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
         break;
     case SYSTEM_EVENT_AP_STACONNECTED:
@@ -88,6 +88,7 @@ void wifi_init_sta(void)
     ret = msgpack_rx_handler_file(&ctx,"/spiffs/WIFI.MPK",&buffer,&buffer_size );
     if(ret == false)
     {
+        printf("wifi file not found \n");
         return ;
     }
    

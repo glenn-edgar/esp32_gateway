@@ -13,23 +13,28 @@
 #include "lwip/netdb.h"
 
 #include "esp_log.h"
-#include "mqtt_client.h"
+
 #include "mqtt_ctrl.h"
 #include "msgpack_rx_handler.h"
+#include "mqtt_client.h"
 #include "mqtt_ctrl_load_setup_data.h"
 
-#define BUFFER_SIZE    1024
-#define URI_SIZE         32
+
+#define BUFFER_SIZE    4000
+
 #define USERNAME_SIZE   32
 #define PASSWORD_SIZE    32
-#define CERT_PEM_SIZE  5522 
+#define CERT_PEM_SIZE  2000
+#define HOST_SIZE       128
+#define TOPIC_SIZE     128
 
 
 
 
-static uint32_t       cert_pem_size;
-static char       cert_pem[CERT_PEM_SIZE];
-static char       uri[URI_SIZE];
+
+
+
+static char       host[HOST_SIZE];
 static char       username[USERNAME_SIZE];
 static char        password[PASSWORD_SIZE];
 static uint32_t   port;
@@ -49,37 +54,28 @@ void mqtt_ctl_load_configuration(esp_mqtt_client_config_t *mqtt_cfg,char *base_t
     ret = msgpack_rx_handler_file(&ctx,"/spiffs/MQTT.MPK",&buffer,&buffer_size );
     if(ret == false)
     {
+        printf("***********************************mqtt file not found \n");
+        mqtt_ctl_change_state(MQTT_ERROR_STATE);
         return ;
     }
    
-    buffer_size = sizeof(uri);
-    ret = msgpack_rx_handler_find_string( &ctx,"URI", uri, &buffer_size );
-    if(ret == false)
-    {
-        goto end;
-        
-    }
     
     ret = msgpack_rx_handler_find_unsigned(&ctx,"PORT", &port );
     if(ret == false)
     {
+        printf("problem at PORT \n");
         goto end;
         
     }
     
-    cert_pem_size = CERT_PEM_SIZE;
-    ret = msgpack_rx_handler_find_binary(&ctx,"CERTIFICATE", cert_pem, &cert_pem_size);
-    if(ret == false)
-    {
-        goto end;
-        
-    }
+
     
     buffer_size = sizeof(username);
     ret = msgpack_rx_handler_find_string( &ctx,"USER_NAME", username, &buffer_size );
     
     if( ret == false )
     {
+         printf("problem at user \n");
        goto end;
     }
     
@@ -87,21 +83,39 @@ void mqtt_ctl_load_configuration(esp_mqtt_client_config_t *mqtt_cfg,char *base_t
     ret = msgpack_rx_handler_find_string(&ctx, "PASSWORD", password, &buffer_size );
     if( ret == false)
     {
+         printf("problem at password \n");
        goto end;
     }
-    
-    ret = msgpack_rx_handler_find_string(&ctx, "TOPIC", base_topic, topic_size );
+
+    ret = msgpack_rx_handler_find_string(&ctx, "BASE_TOPIC", base_topic, topic_size);
     if( ret == false)
     {
+         printf("problem at topic \n");
        goto end;
-    } 
+    }
+    buffer_size = sizeof(host);
+    ret = msgpack_rx_handler_find_string( &ctx,"HOST", host, &buffer_size );
+    if(ret == false)
+    {   printf("problem at host \n");
+        goto end;
+        
+    }
+    
+    printf("***********************************mqtt data loaded \n");
+    
+    mqtt_cfg->uri = "mqtts://test.com";
+    mqtt_cfg->host = host;
     mqtt_cfg->port = port;
-    mqtt_cfg->uri = uri;
     mqtt_cfg->username = username;
     mqtt_cfg->password = password;
-    mqtt_cfg-> cert_pem  = cert_pem;  
-     
+ 
+    mqtt_ctl_change_state( WAIT_FOR_WIFI_CONNECT);
+    free(buffer);
+    return;
+    
 end:
+    printf("*********************************mqtt data not loaded \n");
+    mqtt_ctl_change_state( MQTT_ERROR_STATE);
     free(buffer);   
 }
 

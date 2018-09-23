@@ -94,7 +94,7 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
        check_return(return_value);
        if( ctx_strcmp(COMMAND_FIELD,temp_pointer,temp_size ) == true)
        {
-           //printf("found command \n");
+           printf("found command \n");
            return_value = msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)command_data,command_size );
            check_return(return_value);
            leave_count = leave_count &0x2;
@@ -103,7 +103,7 @@ static bool find_command_data(struct cmp_ctx_s *ctx,
        else if( ctx_strcmp(DATA_FIELD,temp_pointer,temp_size ) == true)
        {
            
-           //printf("found data \n");
+           printf("found data \n");
            return_value = msgpack_rx_handler_scoop_field(ctx,(void **)msgpack_data,msgpack_size);
            
            check_return(return_value);

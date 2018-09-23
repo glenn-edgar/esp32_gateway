@@ -39,6 +39,7 @@ bool msgpack_rx_handler_file(cmp_ctx_t *ctx,char *filename, char **buffer,uint32
     
     temp_ptr = malloc(*buffer_size);
     *buffer_size = fread(temp_ptr,1,*buffer_size,file_handle);
+
     fclose(file_handle);
     *buffer = temp_ptr;
     if(*buffer_size <= 0)
@@ -126,6 +127,51 @@ bool msgpack_rx_handler_find_string(cmp_ctx_t *ctx,char *field_name, char *strin
     for(int i = 0;i < map_size; i++)
     {  
        
+   
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+   
+       if(return_value != true){return return_value;}
+       //printf("@@@@@@@@@@@@@@@ field %s  msg pack field %.*s   \n",field_name,temp_size,temp_pointer);
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+           memset(string,0,*size);
+           //printf("string size %d \n",*size);
+           return_value = cmp_read_str(ctx, string, size);
+           if(return_value != true)
+           {
+               //printf("string size problem %d \n",*size);
+           }
+           
+           return return_value;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
+
+bool msgpack_rx_handler_find_integer(cmp_ctx_t *ctx,char *field_name, int32_t *data )
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
        
        return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
        
@@ -134,9 +180,9 @@ bool msgpack_rx_handler_find_string(cmp_ctx_t *ctx,char *field_name, char *strin
        if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
        {
           
-           memset(string,0,*size);
           
-           return_value = cmp_read_str(ctx, string, size);
+          
+           return_value = cmp_read_int(ctx,data);
            
            
            return return_value;
@@ -149,6 +195,93 @@ bool msgpack_rx_handler_find_string(cmp_ctx_t *ctx,char *field_name, char *strin
     } 
     return false;
 }
+
+bool msgpack_rx_handler_find_unsigned(cmp_ctx_t *ctx,char *field_name, uint32_t *data )
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
+       
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+       
+       if(return_value != true){return return_value;}
+       
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+           
+          
+           return_value = cmp_read_uint(ctx,data);
+           
+           
+           return return_value;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
+
+bool msgpack_rx_handler_find_binary(cmp_ctx_t *ctx,char *field_name, char *buffer, uint32_t *buffer_size)
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
+       
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+       
+       if(return_value != true){return return_value;}
+       
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+           
+          
+           return_value = cmp_read_bin(ctx, buffer, buffer_size );
+           
+           
+           return return_value;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
+
+
+
 
 bool msgpack_rx_handler_get_bin_data_ptr(cmp_ctx_t *ctx ,void **data, uint32_t *size )
 {

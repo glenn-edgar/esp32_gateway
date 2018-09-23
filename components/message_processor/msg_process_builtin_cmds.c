@@ -143,7 +143,7 @@ static bool file_write(  struct cmp_ctx_s *ctx,
     
     *msg_pack_number = 0;
  
-
+    printf("file write \n");
     
     size = FILE_SIZE;
    
@@ -156,7 +156,7 @@ static bool file_write(  struct cmp_ctx_s *ctx,
     
     if( msgpack_rx_handler_find_string(ctx,"FILE_NAME", file_name, &size) != true )
     {
-       printf("file name not found \n");
+       printf("file name not found %s \n",file_name);
        free(file_name);
        return false;
         
@@ -174,7 +174,7 @@ static bool file_write(  struct cmp_ctx_s *ctx,
     spiffs_file = fopen(file_name,"wb");
     
     nwrite = 0;
-    
+    printf("file not opened %s \n",file_name);
     if(spiffs_file != NULL)
     {
       nwrite = fwrite(temp_pointer,1,temp_length,spiffs_file);
@@ -193,8 +193,8 @@ static bool file_write(  struct cmp_ctx_s *ctx,
     }
     else
     {
-    
-    temp = malloc(sizeof(MSG_PACK_ELEMENT)*5);
+    printf("file not opened %s \n",file_name);
+    temp = malloc(sizeof(MSG_PACK_ELEMENT)*6);
     *msg_pack = temp;
     *msg_pack_number = 6;
     msg_dict_pack_string(&temp[0],"TOPIC", "COMMAND_RESPONSE");

@@ -55,6 +55,7 @@
 #include "spiffs_setup.h"
 #include "console_output_server.h"
 #include "console_input_server.h"
+#include "mqtt_ctrl.h"
 
 
 
@@ -98,6 +99,8 @@ void app_main(void)
     wdt_task_subscribe();
     
    initialize_serial_heart_beat();
+   initialize_mqtt_client_handler();
+
       
 
     while(1)

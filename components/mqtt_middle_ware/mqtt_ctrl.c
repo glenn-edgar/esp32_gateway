@@ -15,6 +15,7 @@
 #include "esp_log.h"
 #include "mqtt_client.h"
 #include "mqtt_ctrl_load_setup_data.h"
+#include "wifi_station_setup.h"
 #include "mqtt_ctrl.h"
 
 static TaskHandle_t xHandle = NULL;
@@ -24,10 +25,7 @@ static esp_mqtt_client_handle_t mqtt_client;
 
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event);
-static esp_mqtt_client_config_t mqtt_cfg = 
-{
-  .event_handle = mqtt_event_handler,
-};
+static esp_mqtt_client_config_t mqtt_cfg;
  
 
 
@@ -110,6 +108,7 @@ static void mqtt_client_task( void * pvParameters )
       switch(state)
       {
           case LOAD_CONFIGURATION:
+              memset(&mqtt_cfg,0,sizeof(mqtt_cfg));
               base_topic_size =sizeof(base_topic);
               mqtt_ctl_load_configuration(&mqtt_cfg, base_topic, &base_topic_size);
               break;
@@ -184,11 +183,22 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 
 static void mqtt_ctl_wait_for_wifi_connect(void)
 {
-    ;
+    if( wifi_get_wifi_setup_status() == true)
+    {
+        mqtt_ctl_change_state( SETUP_MQTT_CONNECTION);
+        
+    }
     
 }
 static void mqtt_ctl_setup_connection(void)
 {
+     printf("uri %s \n",  mqtt_cfg.uri );
+     printf("host %s \n", mqtt_cfg.host);
+     printf("port  %d \n", mqtt_cfg.port);
+     printf("user name %s \n", mqtt_cfg.username);
+     printf("password %s \n", mqtt_cfg.password );
+     mqtt_ctl_change_state(WAIT_FOR_MQTT_CONNECT);
+    mqtt_cfg.event_handle = mqtt_event_handler;
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_start(mqtt_client);
     

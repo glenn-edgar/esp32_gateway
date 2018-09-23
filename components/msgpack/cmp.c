@@ -1732,12 +1732,14 @@ bool cmp_read_str(cmp_ctx_t *ctx, char *data, uint32_t *size) {
     return false;
  
   if ((str_size + 1) > *size) {
+      //printf("string size to long %d %d \n",*size,str_size+1);
     *size = str_size;
     ctx->error = STR_DATA_LENGTH_TOO_LONG_ERROR;
     return false;
   }
   
   if (!ctx->read(ctx, data, str_size)) {
+    //printf("string buffer problems \n");
     ctx->error = DATA_READING_ERROR;
     return false;
   }
