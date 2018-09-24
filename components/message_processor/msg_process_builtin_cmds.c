@@ -174,7 +174,7 @@ static bool file_write(  struct cmp_ctx_s *ctx,
     spiffs_file = fopen(file_name,"wb");
     
     nwrite = 0;
-    printf("file not opened %s \n",file_name);
+    
     if(spiffs_file != NULL)
     {
       nwrite = fwrite(temp_pointer,1,temp_length,spiffs_file);

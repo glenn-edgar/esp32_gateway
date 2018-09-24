@@ -60,13 +60,13 @@ static void console_input_task( void * pvParameters )
     binary_buffer_size = input_number/2;    
     hex_to_binary(input_buffer,input_number, binary_buffer);   
     crc_16 = calc_crc16(binary_buffer,binary_buffer_size-2);
-    printf("input data --->%*s\n",input_number,(char *)input_buffer);
-    printf("input_length %d\n",input_number);
+    //printf("input data --->%*s\n",input_number,(char *)input_buffer);
+    //printf("input_length %d\n",input_number);
     msg_crc = (uint16_t *)&binary_buffer[binary_buffer_size-2];
-    printf("CRC %d %d \n",*msg_crc,crc_16);
+    //printf("CRC %d %d \n",*msg_crc,crc_16);
     if( crc_16 == *msg_crc)
     {
-        printf("crc match \n");
+        //printf("crc match \n");
         
     
 
@@ -80,7 +80,7 @@ static void console_input_task( void * pvParameters )
      }
      else
      {
-        printf("no message processor match\n");
+       // printf("no message processor match\n");
      }
      if(msg_pack_number >0)
      {
