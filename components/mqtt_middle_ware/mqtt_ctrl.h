@@ -29,6 +29,7 @@ MQTT_STATE mqtt_ctl_get_state(void);
 
 void initialize_mqtt_client_handler( void);
 
-
+bool mqtt_clt_subscribe(char *ref_topic);
+bool mqtt_clt_publish(char *ref_topic, char *data, int data_length );
 
 #endif

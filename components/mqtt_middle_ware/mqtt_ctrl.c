@@ -16,6 +16,7 @@
 #include "mqtt_client.h"
 #include "mqtt_ctrl_load_setup_data.h"
 #include "wifi_station_setup.h"
+#include "mqtt_ctrl_subscription.h"
 #include "mqtt_ctrl.h"
 
 static TaskHandle_t xHandle = NULL;
@@ -68,8 +69,6 @@ static uint32_t base_topic_size;
 
 static void mqtt_ctl_wait_for_wifi_connect(void); 
 static void mqtt_ctl_setup_connection(void);
-static void mqtt_ctl_restore_subscriptions(void);
-static void  mqtt_ctl_handle_data(uint32_t topic_len,char *topic, uint32_t data_len, char *data  );  
 
 
 
@@ -94,6 +93,38 @@ MQTT_STATE mqtt_ctl_get_state(void)
 } 
 
 
+bool mqtt_clt_publish(char *ref_topic, char *data, int data_length )
+{
+    MQTT_STATE state;
+    
+    state = mqtt_ctl_get_state();
+    if( (state == RESTORE_SUBSCRIPTIONS) || ( state ==MQTT_OPERATIONAL_STATE ))
+    {
+         //int esp_mqtt_client_publish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int len, //int qos, int retain);
+         esp_mqtt_client_publish(mqtt_client, ref_topic, data,data_length,0,0); //QOS 0 do not retain
+         return true;   
+        
+    }
+    return false;
+    
+    
+}
+
+bool mqtt_clt_subscribe(char *ref_topic)
+{
+    MQTT_STATE state;
+    
+    state = mqtt_ctl_get_state();
+    if( (state == RESTORE_SUBSCRIPTIONS) || ( state ==MQTT_OPERATIONAL_STATE ))
+    {
+         esp_mqtt_client_subscribe(mqtt_client, ref_topic, 0);
+         return true;   
+        
+    }
+    return false;
+    
+    
+}
 
 // Task to be created.
 static void mqtt_client_task( void * pvParameters )
@@ -125,7 +156,7 @@ static void mqtt_client_task( void * pvParameters )
               break;
            
           case RESTORE_SUBSCRIPTIONS:
-              mqtt_ctl_restore_subscriptions();
+              mqtt_ctl_restore_subscriptions( mqtt_client);
               mqtt_ctl_state = MQTT_OPERATIONAL_STATE;
               break;
            
@@ -171,7 +202,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             // need topic handler
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
-            mqtt_ctl_handle_data(event->topic_len, event->topic,event->data_len, event->data  );
+            mqtt_ctl_handle_data( mqtt_client,event->topic_len, event->topic,event->data_len, event->data  );
             break;
         case MQTT_EVENT_ERROR:
             printf( "MQTT_EVENT_ERROR \n");
@@ -203,115 +234,9 @@ static void mqtt_ctl_setup_connection(void)
     esp_mqtt_client_start(mqtt_client);
     
 }
-static void mqtt_ctl_restore_subscriptions(void)
-{
-    ;
-    
-}
-
-
-static void  mqtt_ctl_handle_data(uint32_t topic_len,char *topic, uint32_t data_len, char *data  )
-{
-    ;
-    
-}
 
 
 
-#if 0
-static const char *TAG = "MQTT_SAMPLE";
-
-static EventGroupHandle_t wifi_event_group;
-const static int CONNECTED_BIT = BIT0;
-
-
-static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
-{
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
-    // your_context_t *context = event->context;
-    switch (event->event_id) {
-        case MQTT_EVENT_CONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-            ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
-            break;
-        case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-            break;
-
-        case MQTT_EVENT_SUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-            msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
-            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-            break;
-        case MQTT_EVENT_UNSUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
-            break;
-        case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
-            break;
-        case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
-            break;
-        case MQTT_EVENT_ERROR:
-            ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-            break;
-    }
-    return ESP_OK;
-}
 
 
 
-static void mqtt_app_start(void)
-{
-    const esp_mqtt_client_config_t mqtt_cfg = {
-        .uri = "mqtt://iot.eclipse.org",
-        .event_handle = mqtt_event_handler,
-        // .user_context = (void *)your_context
-    };
-
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_start(client);
-}
-
-void app_main()
-{
-    ESP_LOGI(TAG, "[APP] Startup..");
-    ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
-    ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
-
-    esp_log_level_set("*", ESP_LOG_INFO);
-    esp_log_level_set("MQTT_CLIENT", ESP_LOG_VERBOSE);
-    esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
-    esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
-    esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
-    esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
-
-    nvs_flash_init();
-    wifi_init();
-    mqtt_app_start();
-}
-
-
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-            msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-            ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
-            
-                        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-            msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
-            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-#endif
