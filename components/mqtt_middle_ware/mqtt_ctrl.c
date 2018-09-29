@@ -93,15 +93,24 @@ MQTT_STATE mqtt_ctl_get_state(void)
 } 
 
 
-bool mqtt_clt_publish(char *ref_topic, char *data, int data_length )
+bool mqtt_clt_publish(char *topic, char *data, int data_length )
 {
     MQTT_STATE state;
-    
+    int  size;
+    char *ref_topic;
+   
     state = mqtt_ctl_get_state();
     if( (state == RESTORE_SUBSCRIPTIONS) || ( state ==MQTT_OPERATIONAL_STATE ))
     {
+         size = strlen(base_topic)+strlen(topic)+4;
+         ref_topic = malloc(size);
+         strcpy(ref_topic,base_topic);
+         
+         strcat(ref_topic,topic);
+         //printf("reference topic %s \n",ref_topic);
          //int esp_mqtt_client_publish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int len, //int qos, int retain);
          esp_mqtt_client_publish(mqtt_client, ref_topic, data,data_length,0,0); //QOS 0 do not retain
+         free(ref_topic);
          return true;   
         
     }
@@ -129,6 +138,7 @@ bool mqtt_clt_subscribe(char *ref_topic)
 // Task to be created.
 static void mqtt_client_task( void * pvParameters )
 {
+   int temp_len;
    mqtt_ctl_change_state( LOAD_CONFIGURATION);
    while(1)
    {       
@@ -142,6 +152,12 @@ static void mqtt_client_task( void * pvParameters )
               memset(&mqtt_cfg,0,sizeof(mqtt_cfg));
               base_topic_size =sizeof(base_topic);
               mqtt_ctl_load_configuration(&mqtt_cfg, base_topic, &base_topic_size);
+              temp_len = strlen(base_topic)-1;
+              if(base_topic[temp_len] != '/')
+              {
+                  strcat(base_topic,"/");
+              }
+              mqtt_initialize_subscriptions(base_topic);
               break;
            
           case WAIT_FOR_WIFI_CONNECT:
