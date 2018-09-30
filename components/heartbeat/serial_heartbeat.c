@@ -35,7 +35,7 @@ static void serial_heartbeat_task( void * pvParameters )
   {
    wdt_reset_task_time();
    status = get_status_value();
-   printf("high water stack mark %d \n",uxTaskGetStackHighWaterMark( NULL ));
+   //printf("high water stack mark %d \n",uxTaskGetStackHighWaterMark( NULL ));
    msg_dict_pack_string(&msg_pack[0],"TOPIC","HEART_BEAT");      
    msg_dict_pack_unsigned_integer(&msg_pack[1],"STATUS",status );
    msg_dict_pack_unsigned_integer(&msg_pack[2],"FREE_HEAP",esp_get_free_heap_size());

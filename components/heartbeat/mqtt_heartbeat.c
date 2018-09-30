@@ -49,7 +49,7 @@ static void mqtt_heartbeat_task( void * pvParameters )
    free(pack_buffer);
    
    
-   vTaskDelay(2000/ portTICK_PERIOD_MS);
+   vTaskDelay(10000/ portTICK_PERIOD_MS);
 
   }
 }

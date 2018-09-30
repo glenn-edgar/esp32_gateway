@@ -56,7 +56,7 @@
 #include "console_output_server.h"
 #include "console_input_server.h"
 #include "mqtt_ctrl.h"
-
+#include "app_switch_main.h"
 
 
                                 
@@ -101,7 +101,7 @@ void app_main(void)
    initialize_serial_heart_beat();
    initialize_mqtt_client_handler();
 
-      
+   initialize_app_switch_main(); 
 
     while(1)
     {

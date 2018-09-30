@@ -16,6 +16,19 @@ void gpio_config_input_pin( int pin )
 {
    gpio_pad_select_gpio(pin); 
    gpio_set_direction(pin, GPIO_MODE_INPUT); 
+
+}
+
+void gpio_config_pull_up( int pin )
+{
+    gpio_pullup_en(pin);
+    
+}
+
+void gpio_config_pull_down( int pin )
+{
+    gpio_pulldown_en(pin);
+    
 }
 
 void gpio_set_value(int pin, int value )
@@ -30,6 +43,8 @@ int gpio_read_value(int pin)
     
    return gpio_get_level(pin); 
 }
+
+
 
 #if 0
 

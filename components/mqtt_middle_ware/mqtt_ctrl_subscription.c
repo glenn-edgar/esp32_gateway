@@ -79,6 +79,7 @@ void mqtt_ctrl_register_subscription(char *topic, SUBSCRITION_FUNCTION topic_fun
       subscription_table[subscription_number].sub_function = topic_function;
       subscription_table[subscription_number].topic = ref_topic;
       mqtt_clt_subscribe(ref_topic);
+      subscription_number +=1;
       
     
     
@@ -88,8 +89,10 @@ void mqtt_ctrl_register_subscription(char *topic, SUBSCRITION_FUNCTION topic_fun
 
 void mqtt_ctl_restore_subscriptions(esp_mqtt_client_handle_t mqtt_client)
 {
+    printf("restore subscriptions %d \n",subscription_number);
     for(int i = 0;i<subscription_number;i++ )
     {
+       printf("topic is %i %s \n",i,subscription_table[i].topic);
        mqtt_clt_subscribe(subscription_table[i].topic);
         
     }
