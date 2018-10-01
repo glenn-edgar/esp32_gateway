@@ -8,6 +8,7 @@ Implements of codes for cf_runtime_functions.c
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <esp_types.h>
 #include "cf_chain_flow_support.h"
 
@@ -108,12 +109,14 @@ int wait_event_count_fn( unsigned link_id, CF_FUN_AUX param_1, unsigned rx_event
 {
   unsigned value; 
   int      return_value;
+  
   if( event == CF_INIT_EVENT )
   {
        cf_store_cell_value( link_id , 0 );
        return_value = CF_CONTINUE;
 
   }
+  
    if( event == rx_event )
    {
        value = cf_get_cell_value( link_id );

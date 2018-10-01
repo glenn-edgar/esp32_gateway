@@ -23,6 +23,16 @@ bool msgpack_rx_handler_find_unsigned(cmp_ctx_t *ctx,char *field_name, uint32_t 
 
 bool msgpack_rx_handler_find_binary(cmp_ctx_t *ctx,char *field_name, char *buffer, uint32_t *buffer_size);
 
+
+
+bool msgpack_rx_handler_find_array_count(cmp_ctx_t *ctx,char *field_name,uint32_t *count);
+
+bool msgpack_rx_handler_find_array_unsigned(cmp_ctx_t *ctx,char *field_name,uint32_t *count, uint32_t *buffer);
+
+bool msgpack_rx_handler_find_array_integer(cmp_ctx_t *ctx,char *field_name,uint32_t *count, int32_t *buffer);
+
+
+
 bool msgpack_rx_handler_get_bin_data_ptr(cmp_ctx_t *ctx ,void **data, uint32_t *size );
 
 bool msgpack_rx_handler_skip_field(cmp_ctx_t *ctx);

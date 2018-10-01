@@ -28,11 +28,11 @@ bool msgpack_rx_handler_file(cmp_ctx_t *ctx,char *filename, char **buffer,uint32
     strcpy( file_buffer, filename);
     
     file_handle = fopen(file_buffer,"rb");
-    free(file_buffer);
+    
     
     if(file_handle == NULL)
     {
-        
+        free(file_buffer);
         return false;
        
     }
@@ -44,11 +44,14 @@ bool msgpack_rx_handler_file(cmp_ctx_t *ctx,char *filename, char **buffer,uint32
     *buffer = temp_ptr;
     if(*buffer_size <= 0)
     {
-        fclose(file_handle);
+        
         free(temp_ptr);
+        free(file_buffer);
         return false;
     }
-    fclose(file_handle);
+
+    
+    free(file_buffer);
     msgpack_rx_handler_init(ctx, temp_ptr, *buffer_size);
     return true;
 }
@@ -270,6 +273,159 @@ bool msgpack_rx_handler_find_binary(cmp_ctx_t *ctx,char *field_name, char *buffe
            
            
            return return_value;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
+
+bool msgpack_rx_handler_find_array_count(cmp_ctx_t *ctx,char *field_name,uint32_t *count)
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
+       
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+       
+       if(return_value != true){return return_value;}
+       
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+           
+          
+           return_value =  cmp_read_array(ctx,count);
+           
+           
+           return return_value;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
+
+
+bool msgpack_rx_handler_find_array_unsigned(cmp_ctx_t *ctx,char *field_name,uint32_t *count, uint32_t *buffer)
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+    uint32_t   size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
+       
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+       
+       if(return_value != true){return return_value;}
+       
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+           
+          
+           return_value =  cmp_read_array(ctx,&size);
+           if( size != *count)
+           {
+               return false;
+           }
+           for(int j = 0; j < size; j++)
+           {
+             if( cmp_read_uint(ctx, buffer) !=true)
+             {
+                 return false;
+             }
+             buffer++;
+           
+           }
+           
+           return true;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
+
+bool msgpack_rx_handler_find_array_integer(cmp_ctx_t *ctx,char *field_name,uint32_t *count, int32_t *buffer)
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+    uint32_t   size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
+       
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+       
+       if(return_value != true){return return_value;}
+       
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+           
+          
+           return_value =  cmp_read_array(ctx,&size);
+           if( size != *count)
+           {
+               return false;
+           }
+           for(int j = 0;j < size; j++)
+           {
+             if( cmp_read_int(ctx, buffer) !=true)
+             {
+                 return false;
+             }
+             buffer++;
+           
+           }
+           
+           return true;
            
            
        }

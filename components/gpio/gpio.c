@@ -4,6 +4,45 @@
 #include "sdkconfig.h"
 
 #include "gpio.h"
+
+#if 0
+typedef enum {
+    GPIO_PULLUP_ONLY,               /*!< Pad pull up            */
+    GPIO_PULLDOWN_ONLY,             /*!< Pad pull down          */
+    GPIO_PULLUP_PULLDOWN,           /*!< Pad pull up + pull down*/
+    GPIO_FLOATING,                  /*!< Pad floating           */
+} gpio_pull_mode_t;
+esp_err_t gpio_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
+
+#endif     
+     
+void gpio_configure_input(int pin,int pull_up_mode)
+{
+   gpio_config_input_pin(  pin );
+   switch(pull_up_mode)
+   {
+       case 0:
+           gpio_set_pull_mode(pin,GPIO_PULLUP_ONLY);
+           break;
+           
+       case 1:
+           gpio_set_pull_mode(pin,GPIO_PULLDOWN_ONLY);
+           break;
+
+       case 2:
+           gpio_set_pull_mode(pin,GPIO_PULLUP_PULLDOWN);
+           break;
+
+       case 3:
+           gpio_set_pull_mode(pin,GPIO_FLOATING);
+           break;
+       
+       default:
+            abort(); // illegal pull up mode
+   }        
+         
+  
+}
      
      
 void gpio_config_output_pin( int pin )

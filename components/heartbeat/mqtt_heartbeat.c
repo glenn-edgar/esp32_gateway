@@ -8,7 +8,7 @@
 #include <esp_types.h>
 
 #include "watchdog.h"
-#include "console_output_server.h"
+#include "msg_dict_stream.h"
 #include "status_interface.h"
 
 #include "mqtt_ctrl.h"

@@ -8,18 +8,22 @@
 #include "freertos/task.h"
 #include "cf_events.h"
 #include "cf_status_bit.h"
+#include "app_input_functions.h"
 #include "cf_chain_flow_support.h"
-#include "app_switch_main.h"
+
+#include "app_input_main.h"
 
 static TaskHandle_t xHandle = NULL;
-static void app_switch_task( void * pvParameters );
+static void app_input_task( void * pvParameters );
 
 
-void initialize_app_switch_main(void)
+void initialize_app_input_main(void)
 {
-   
-   xTaskCreate( app_switch_task, "APP_SWITCH_TASK",4000, NULL, 20, &xHandle );
-   configASSERT( xHandle );
+   if(app_input_input_data_read()==true)
+   {
+       xTaskCreate( app_input_task, "APP_INPUT_TASK",4000, NULL, 20, &xHandle );
+       configASSERT( xHandle );
+   }
     
 }
 static inline void  process_status_data( unsigned status_data)
@@ -42,7 +46,7 @@ static inline void  process_status_data( unsigned status_data)
 }
 
 // Task to be created.
-static void app_switch_task( void * pvParameters )
+static void app_input_task( void * pvParameters )
 {
     int second_sub_count;
     int minute_sub_count;
@@ -75,7 +79,7 @@ static void app_switch_task( void * pvParameters )
              event_number = cf_rx_event( &event_id, &event_data );
              if( event_number > 0 )
              {
-
+              
               cf_process_cf_event( event_id, event_data);
              }
            }
@@ -85,11 +89,14 @@ static void app_switch_task( void * pvParameters )
         second_sub_count += 10;
         if(second_sub_count >= 1000)
         {
+          second_sub_count = 0;
+          
           cf_send_event( CF_SECOND_TICK, 1 );
           minute_sub_count += 1;
           if(minute_sub_count >= 60 )
           {
               cf_send_event( CF_MINUTE_TICK,1 );
+              printf("sending minute event \n");
               minute_sub_count = 0;
           }
             
