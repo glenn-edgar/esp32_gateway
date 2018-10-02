@@ -9,13 +9,14 @@
 #include "cf_events.h"
 #include "cf_status_bit.h"
 #include "app_input_functions.h"
-#include "cf_chain_flow_support.h"
+#include "chain_flow_support.h"
+#include "chain_flow_assembler/cf_chain_flow_include.h"
 
 #include "app_input_main.h"
 
 static TaskHandle_t xHandle = NULL;
 static void app_input_task( void * pvParameters );
-
+static void load_chain_flow_data( CHAIN_FLOW_HANDLE *cf );
 
 void initialize_app_input_main(void)
 {
@@ -26,7 +27,7 @@ void initialize_app_input_main(void)
    }
     
 }
-static inline void  process_status_data( unsigned status_data)
+static inline void  process_status_data( CHAIN_FLOW_HANDLE *cf, unsigned status_data)
 {
 
 #if 0   
@@ -54,48 +55,49 @@ static void app_input_task( void * pvParameters )
     uint32_t event_number;
     unsigned event_id;
     unsigned event_data;
+    CHAIN_FLOW_HANDLE cf;
     
     minute_sub_count = 0;
     second_sub_count = 0;
     
     
-   
+    load_chain_flow_data( &cf );
     
-    initialize_cf_system( );
+    initialize_cf_system(&cf);
 
     for(;;)
     {
-        while( cf_event_number() != 0)
+        while( cf_event_number(&cf) != 0)
         {
-           status_data = cf_get_status();
+           status_data = cf_get_status(&cf);
            if( status_data != 0 )
            {
-               process_status_data( status_data);
+               process_status_data(&cf, status_data);
              
            }
            else
            {
            
-             event_number = cf_rx_event( &event_id, &event_data );
+             event_number = cf_rx_event( &cf, &event_id, &event_data );
              if( event_number > 0 )
              {
               
-              cf_process_cf_event( event_id, event_data);
+              cf_process_cf_event( &cf,event_id, event_data);
              }
            }
         }
         vTaskDelay(10/ portTICK_PERIOD_MS); 
-        cf_send_event( CF_TIME_TICK_EVENT, 10 );
+        cf_send_event( &cf,CF_TIME_TICK_EVENT, 10 );
         second_sub_count += 10;
         if(second_sub_count >= 1000)
         {
           second_sub_count = 0;
           
-          cf_send_event( CF_SECOND_TICK, 1 );
+          cf_send_event( &cf,CF_SECOND_TICK, 1 );
           minute_sub_count += 1;
           if(minute_sub_count >= 60 )
           {
-              cf_send_event( CF_MINUTE_TICK,1 );
+              cf_send_event( &cf,CF_MINUTE_TICK,1 );
               printf("sending minute event \n");
               minute_sub_count = 0;
           }
@@ -106,4 +108,18 @@ static void app_input_task( void * pvParameters )
     }       
       
     
+}
+
+static void load_chain_flow_data( CHAIN_FLOW_HANDLE *cf )
+{
+    memset(cf,0,sizeof(CHAIN_FLOW_HANDLE));
+ 
+    cf->number_of_chains =CHAIN_NUM;
+    cf->number_of_links = LINK_NUM;
+    cf->chain_state = chain_state;
+    cf->link_state = link_state;
+    cf->link_data  = link_data;
+    cf->start_state = start_state;
+    cf->chain_control = chain_control;
+
 }

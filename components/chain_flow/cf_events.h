@@ -16,12 +16,12 @@
 #define CF_MINUTE_TICK         6
 #define CF_APP_EVENT_START    10
 
+#include "chain_flow_support.h"
 
+void cf_initialize_event_manager( CHAIN_FLOW_HANDLE *cf );
+int cf_event_number(CHAIN_FLOW_HANDLE *cf);
 
-void cf_initialize_event_manager( void );
-int cf_event_number(void);
-void cf_send_interrupt_event( unsigned event, unsigned data);
-void cf_send_event( unsigned event, unsigned data );
-int cf_rx_event( unsigned *event, unsigned *event_data );
+void cf_send_event( CHAIN_FLOW_HANDLE *cf, unsigned event, unsigned data );
+int cf_rx_event( CHAIN_FLOW_HANDLE *cf, unsigned *event, unsigned *event_data );
 
 #endif

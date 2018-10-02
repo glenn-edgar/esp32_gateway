@@ -59,7 +59,7 @@ class CF_Assembler:
    def generate_chain_elements(self):
        links_elements = []
        chain_elements = []
-       chain_elements.append("const CHAIN_LINK chain_control[] =")
+       chain_elements.append("static CHAIN_LINK chain_control[] =")
        chain_elements.append("{")
 
      
@@ -78,7 +78,7 @@ class CF_Assembler:
        for i in range(0,len(self.chain_list)):
           chain_name = self.chain_list[i]
           defs = self.cf_definition[chain_name]
-          link_elements.append("const LINK_CELL CHAIN_"+chain_name+"_LINKS[]= ")
+          link_elements.append("static LINK_CELL CHAIN_"+chain_name+"_LINKS[]= ")
           link_elements.append("{")
           for j in range(0,len(defs)):
               de = defs[j]
@@ -107,7 +107,7 @@ class CF_Assembler:
        fh.write("#define _EXTERNAL_FUNCTIONS_H_ \n")
        fh.write("\n")
        
-       fh.write('#include "cf_chain_flow_support.h" \n')
+       fh.write('#include "chain_flow_support.h" \n')
        fh.write('#include "cf_events.h"\n')
        fh.write("/*\n")
        fh.write("This is the symbolic definitions of the chains\n") 
@@ -126,7 +126,7 @@ class CF_Assembler:
            fh.write("\n\n\n")
  
        for i in self.foriegn_helper_functions.keys():
-              fh.write("int "+self.foriegn_helper_functions[i]+"(unsigned link_id, unsigned param_1,\n")
+              fh.write("int "+self.foriegn_helper_functions[i]+"(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,\n")
               fh.write("  unsigned param_2, unsigned param_3, unsigned event, unsigned data);\n")
               fh.write("\n\n")
        fh.write("\n\n\n\n")
@@ -146,12 +146,12 @@ class CF_Assembler:
         
        fh.write("\n\n\n")
 
-       fh.write('#include "cf_chain_flow_support.h" \n')
+       fh.write('#include "chain_flow_support.h" \n')
        fh.write('#include "cf_runtime_functions.h" \n')
        fh.write('#include "cf_external_functions.h" \n')
-       fh.write("char  chain_state["+str(len(self.chain_list)) +"];\n")
-       fh.write("char  link_state["+str(self.link_number)+"];\n") 
-       fh.write("unsigned link_data["+str(self.link_number)+"];\n")
+       fh.write("static char  chain_state["+str(len(self.chain_list)) +"];\n")
+       fh.write("static char  link_state["+str(self.link_number)+"];\n") 
+       fh.write("static unsigned link_data["+str(self.link_number)+"];\n")
        temp =[]
        for i in range( 0,len(self.start_flag_list)):
           
@@ -159,7 +159,7 @@ class CF_Assembler:
                 temp.append("1")
              else:
                 temp.append("0")
-       fh.write("const unsigned start_state[]={"+",".join(temp)+"};\n")
+       fh.write("static unsigned start_state[]={"+",".join(temp)+"};\n")
        fh.write("\n\n\n")
        link_data = self.generate_link_elements()
         

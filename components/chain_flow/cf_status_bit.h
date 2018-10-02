@@ -9,7 +9,7 @@
 
 #ifndef CF_STATUS_BIT_H_
 #define CF_STATUS_BIT_H
-    
+#include "chain_flow_support.h"   
 /*
 Status Bit Definitions
 Max 32 bits
@@ -23,11 +23,10 @@ Max 32 bits
     
   
     
-void cf_initialize_status_manager( void );
-void cf_set_interrupt_status_bit( uint32_t status_bit );
-void cf_set_status_bit( uint32_t status_bit );
-uint32_t cf_get_status( void );
-void cf_clear_status(void );
-void  cf_status_clear_bit( uint32_t status_bit);
+void cf_initialize_status_manager( CHAIN_FLOW_HANDLE *cf );
+void cf_set_status_bit( CHAIN_FLOW_HANDLE *cf,uint32_t status_bit );
+uint32_t cf_get_status( CHAIN_FLOW_HANDLE *cf );
+void cf_clear_status(CHAIN_FLOW_HANDLE *cf );
+void  cf_status_clear_bit( CHAIN_FLOW_HANDLE *cf, uint32_t status_bit);
     
 #endif

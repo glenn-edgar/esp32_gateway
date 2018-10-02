@@ -48,16 +48,15 @@ bool app_input_input_data_read(void)
 static void send_mqtt_message(int pin,int value);
 bool debounce_control_update( DEBOUNCE_CTRL *debounce_ctrl, unsigned new_value);
 
-int pat_watch_dog(unsigned link_id, unsigned param_1,
-  unsigned param_2, unsigned param_3, unsigned event, unsigned data)
-{
-   wdt_reset_task_time(); 
-   return CF_DISABLE;   
-}
 
 
-int sample_switches(unsigned link_id, unsigned param_1,
-  unsigned param_2, unsigned param_3, unsigned event, unsigned data)
+int app_input_sample_inputs(CHAIN_FLOW_HANDLE *cf,
+                            unsigned link_id, 
+                            unsigned param_1,
+                            unsigned param_2, 
+                            unsigned param_3, 
+                            unsigned event, 
+                            unsigned data)
 {
     unsigned input;
     bool     transistion;
@@ -75,8 +74,13 @@ int sample_switches(unsigned link_id, unsigned param_1,
     return CF_DISABLE;    
 }
 
-int output_values(unsigned link_id, unsigned param_1,
-  unsigned param_2, unsigned param_3, unsigned event, unsigned data)
+int app_input_output_values(CHAIN_FLOW_HANDLE *cf,
+                            unsigned link_id, 
+                            unsigned param_1,
+                            unsigned param_2, 
+                            unsigned param_3, 
+                            unsigned event, 
+                            unsigned data)
 {
    
    for( int i=0;i<input_number;i++)
@@ -92,13 +96,6 @@ int output_values(unsigned link_id, unsigned param_1,
  
 
 
-int add_watch_dog(unsigned link_id, unsigned param_1,
-  unsigned param_2, unsigned param_3, unsigned event, unsigned data)
-{
-    
-   wdt_task_subscribe(); 
-   return CF_DISABLE;     
-}  
 
 
 int setup_gpio(unsigned link_id, unsigned param_1,
@@ -108,23 +105,6 @@ int setup_gpio(unsigned link_id, unsigned param_1,
     return CF_DISABLE;    
 }
 
-int wait_for_mqtt_connect(unsigned link_id, unsigned param_1,
-  unsigned param_2, unsigned param_3, unsigned event, unsigned data)
-
-{
-    MQTT_STATE  state;
-    int return_value;
-    state = mqtt_ctl_get_state();
-    if( (state == RESTORE_SUBSCRIPTIONS) || ( state ==MQTT_OPERATIONAL_STATE ))
-    {
-    return_value = 1;
-    }
-    else
-    {
-        return_value = 0;
-    }
-    return return_value;
-}    
 
 static void send_mqtt_message(int pin,int value)
 {

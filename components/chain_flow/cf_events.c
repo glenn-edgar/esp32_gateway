@@ -7,78 +7,57 @@
 **
 */
 #include <esp_types.h>
+#include "chain_flow_support.h"
 #include "cf_events.h"
 
 
-#define EVENT_SIZE 256
-#define EVENT_MASK 255
 
-static unsigned rx_index;
-static unsigned tx_index;
-static unsigned event_number;
 
-typedef struct
+
+
+void cf_initialize_event_manager(  CHAIN_FLOW_HANDLE *cf )
 {
-   unsigned  event;
-   unsigned  data;
-}EVENT_DATA;
-
-static EVENT_DATA event_data[ EVENT_SIZE ];
-
-void cf_initialize_event_manager( void )
-{
-   rx_index     = 0;
-   tx_index     = 0;
-   event_number = 0;
+   cf->rx_index     = 0;
+   cf->tx_index     = 0;
+   cf->event_number = 0;
 }
 
-void cf_send_interrupt_event( unsigned event, unsigned data)
-{
-  
-   if( event_number < EVENT_SIZE )
-   {
-     event_data[rx_index].event      = event;
-     event_data[rx_index].data       = data;
-     event_number++;
-     rx_index = ( rx_index +1 )&EVENT_MASK;
-   }
-   
-}
 
-int cf_event_number(void)
+
+int cf_event_number( CHAIN_FLOW_HANDLE *cf)
 {
     
-    return event_number;
+    return cf->event_number;
     
 }
 
 
-void cf_send_event( unsigned event, unsigned data )
+void cf_send_event(  CHAIN_FLOW_HANDLE *cf,unsigned event, unsigned data )
 {
   
-   if( event_number < EVENT_SIZE )
+   if( cf->event_number < EVENT_SIZE )
    {
-     event_data[rx_index].event      = event;
-     event_data[rx_index].data       = data;
-     event_number++;
-     rx_index = ( rx_index +1 )&EVENT_MASK;
+     cf->event_data[cf->rx_index].event      = event;
+     cf->event_data[cf->rx_index].data       = data;
+     cf->event_number++;
+     cf->rx_index = ( cf->rx_index +1 )&EVENT_MASK;
    }
   
 }
 
 
-int cf_rx_event( unsigned *event, unsigned *data )
+int cf_rx_event(  CHAIN_FLOW_HANDLE *cf,unsigned *event, unsigned *data )
 {
    int return_value;
 
    
-   if( event_number > 0 )
+   if( cf->event_number > 0 )
    {
-      *event          = event_data[tx_index].event;
-      *data     = event_data[tx_index].data;
+      *event          = cf->event_data[cf->tx_index].event;
+      *data     = cf->event_data[cf->tx_index].data;
       return_value    = 1;
-      event_number--;
-      tx_index = ( tx_index +1 )&EVENT_MASK;
+      cf->event_number--;
+      cf->tx_index = ( cf->tx_index +1 )&EVENT_MASK;
 
    }
    else
