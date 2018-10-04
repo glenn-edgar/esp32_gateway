@@ -57,6 +57,7 @@
 #include "console_input_server.h"
 #include "mqtt_ctrl.h"
 #include "app_input_main.h"
+#include "app_output_main.h"
 
 
                                 
@@ -102,7 +103,7 @@ void app_main(void)
    initialize_mqtt_client_handler();
 
    initialize_app_input_main(); 
-
+   initialize_app_output_main(); 
     while(1)
     {
       

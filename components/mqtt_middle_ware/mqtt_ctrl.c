@@ -22,7 +22,7 @@
 static TaskHandle_t xHandle = NULL;
 static SemaphoreHandle_t xSemaphore = NULL;
 static esp_mqtt_client_handle_t mqtt_client;
-
+static bool reboot_flag = true;
 
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event);
@@ -165,6 +165,7 @@ static void mqtt_client_task( void * pvParameters )
              break;
            
           case SETUP_MQTT_CONNECTION:
+
               mqtt_ctl_setup_connection();
              break;
            
@@ -201,6 +202,14 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
         case MQTT_EVENT_CONNECTED:
             printf( "MQTT_EVENT_CONNECTED \n");
             mqtt_ctl_change_state(RESTORE_SUBSCRIPTIONS);
+            if(reboot_flag == true)
+            {
+                  reboot_flag = false;
+                  mqtt_clt_publish("/REBOOT", "\xa6REBOOT", 7 ); // add data later
+                  
+            }
+            
+
             break;
         case MQTT_EVENT_DISCONNECTED:
             printf( "MQTT_EVENT_DISCONNECTED \n");
