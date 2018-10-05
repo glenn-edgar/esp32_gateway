@@ -99,7 +99,7 @@ static void app_output_task( void * pvParameters )
           if(minute_sub_count >= 60 )
           {
               cf_send_event( &cf,CF_MINUTE_TICK,1 );
-              printf("sending minute event \n");
+              
               minute_sub_count = 0;
           }
             

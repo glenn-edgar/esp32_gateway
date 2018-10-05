@@ -11,20 +11,15 @@
 
 
 
-bool app_input_read_configuration( uint32_t *input_number, uint32_t **pins,DEBOUNCE_CTRL **debounce_ctrl )
+bool app_input_file_read_configuration( uint32_t *input_number, uint32_t **pins,DEBOUNCE_CTRL **debounce_ctrl )
 {
     
-    uint32_t      pin_count;
-    uint32_t    pullup_count;
-    uint32_t    debounce_count;
-    uint32_t *pin_array;
-    uint32_t *pullup_array;
-    DEBOUNCE_CTRL *debounce;
+    
+   
     char     *buffer;
     uint32_t buffer_size = 1000;
     cmp_ctx_t ctx;
-    uint32_t *pin_ptr;
-    uint32_t *pullup_ptr;
+
     
     if( msgpack_rx_handler_file(&ctx,"/spiffs/IO_INPUT.MPK",  &buffer,&buffer_size ) != true)
     {
@@ -32,6 +27,29 @@ bool app_input_read_configuration( uint32_t *input_number, uint32_t **pins,DEBOU
          return false;
     }
    
+    app_input_read_setup( buffer_size, buffer, input_number, pins, debounce_ctrl );
+    free(buffer);
+    
+    return false;    
+    
+}
+
+
+bool app_input_read_setup( uint32_t data_len, char *data, uint32_t *input_number, uint32_t **pins, DEBOUNCE_CTRL **debounce_ctrl )
+{
+     uint32_t      pin_count;
+    uint32_t    pullup_count;
+    uint32_t    debounce_count;
+    uint32_t *pin_array;
+    uint32_t *pullup_array;
+    DEBOUNCE_CTRL *debounce;
+   
+    
+    cmp_ctx_t ctx;
+    uint32_t *pin_ptr;
+    uint32_t *pullup_ptr;
+    
+    msgpack_rx_handler_init(&ctx, data, data_len);
     if( msgpack_rx_handler_find_unsigned(&ctx,"debounce", &debounce_count )!= true)
     {
          goto exit;
@@ -89,8 +107,28 @@ bool app_input_read_configuration( uint32_t *input_number, uint32_t **pins,DEBOU
      
       
     }
+
 exit:
-    free(buffer);
+   
     return false;    
     
+}
+
+bool app_input_read_input(uint32_t data_len, 
+                          char *data, 
+                          uint32_t *input_number, 
+                          uint32_t **pins )
+{
+    cmp_ctx_t ctx;
+    msgpack_rx_handler_init(&ctx, data, data_len);
+    if( msgpack_rx_handler_find_array_count(&ctx,"pins",input_number) != true )
+    {
+        return false;
+    }
+    *pins = malloc(*input_number*sizeof(uint32_t));
+    if( msgpack_rx_handler_find_array_unsigned(&ctx,"pins",input_number,*pins) != true )
+    {
+        return false;
+    }
+    return true;
 }

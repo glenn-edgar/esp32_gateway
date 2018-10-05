@@ -20,11 +20,10 @@ static void load_chain_flow_data( CHAIN_FLOW_HANDLE *cf );
 
 void initialize_app_input_main(void)
 {
-   if(app_input_input_data_read()==true)
-   {
+       app_input_input_data_read();
        xTaskCreate( app_input_task, "APP_INPUT_TASK",4000, NULL, 20, &xHandle );
        configASSERT( xHandle );
-   }
+ 
     
 }
 static inline void  process_status_data( CHAIN_FLOW_HANDLE *cf, unsigned status_data)
@@ -98,7 +97,7 @@ static void app_input_task( void * pvParameters )
           if(minute_sub_count >= 60 )
           {
               cf_send_event( &cf,CF_MINUTE_TICK,1 );
-              printf("sending minute event \n");
+              
               minute_sub_count = 0;
           }
             

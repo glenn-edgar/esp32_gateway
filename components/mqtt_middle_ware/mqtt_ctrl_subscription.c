@@ -109,12 +109,14 @@ void  mqtt_ctl_handle_data(esp_mqtt_client_handle_t mqtt_client,
     
     for(int i=0;i<subscription_number;i++)
     {
+        //printf("%.*s %s \n",topic_len,topic,subscription_table[i].topic);
         if(strlen(subscription_table[i].topic)!= topic_len)
         {
-            break;
+            continue;
         }
         if( strncmp(subscription_table[i].topic,topic,topic_len) == 0)
         {
+            //printf("topic match \n");
             subscription_table[i].sub_function(mqtt_client, topic_len, topic,data_len,data);
             return;
             
@@ -123,7 +125,8 @@ void  mqtt_ctl_handle_data(esp_mqtt_client_handle_t mqtt_client,
         
         
     }
-    abort(); // topic function not detected
+    printf("no match \n");
+    //abort(); // topic function not detected
     
 }
 

@@ -205,7 +205,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             if(reboot_flag == true)
             {
                   reboot_flag = false;
-                  mqtt_clt_publish("/REBOOT", "\xa6REBOOT", 7 ); // add data later
+                  mqtt_clt_publish("REBOOT", "\xa6REBOOT", 7 ); // add data later
                   
             }
             

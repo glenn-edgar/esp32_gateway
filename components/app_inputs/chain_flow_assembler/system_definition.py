@@ -8,8 +8,10 @@ hf = Helper_Functions( cf )
 cf.define_chain("initialization",True)
 
 hf.one_step("add_watch_dog")
+hf.one_step("app_input_register_configure_read")
+hf.one_step("app_input_register_read")
 hf.wait( "wait_for_mqtt_connect"  )
-hf.enable_chain( "sampling_task","output_task")
+hf.enable_chain( "sampling_task")
 hf.terminate()  #initialization is done now disable the chain
 cf.end_chain()
 
@@ -32,12 +34,7 @@ hf.one_step("app_input_sample_inputs")
 hf.reset()
 cf.end_chain()
 
-#These chains are for actions every minute
-cf.define_chain("output_task", False )
-hf.wait_event_count("CF_SECOND_TICK",10)
-hf.one_step("app_input_output_values")
-hf.reset()
-cf.end_chain()
+
 
 
 

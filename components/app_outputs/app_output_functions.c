@@ -63,7 +63,7 @@ int analog_output_subscribe_configuration(CHAIN_FLOW_HANDLE *cf, unsigned link_i
   unsigned param_2, unsigned param_3, unsigned event, unsigned data)
 {
 
-   mqtt_ctrl_register_subscription("GPIO_OUTPUT_CONFIGURATION", app_ouput_configure_pin_data );
+   mqtt_ctrl_register_subscription("OUTPUTS/GPIO/CONFIGURATION", app_ouput_configure_pin_data );
    return CF_DISABLE;      
 }
 
@@ -72,7 +72,7 @@ int analog_ouptut_subscribe_output(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsi
   unsigned param_2, unsigned param_3, unsigned event, unsigned data)
 {
 
-   mqtt_ctrl_register_subscription("GPIO_OUTPUT", app_ouput_set_pin_data );
+   mqtt_ctrl_register_subscription("OUTPUTS/GPIO/SET", app_ouput_set_pin_data );
    return CF_DISABLE;      
 }
 
@@ -82,7 +82,7 @@ int analog_ouptut_subscribe_output(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsi
 int analog_output_subscribe_pulse_output(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,
   unsigned param_2, unsigned param_3, unsigned event, unsigned data)
 {
-    mqtt_ctrl_register_subscription("GPIO_OUTPUT_PUSE", app_ouput_find_pulse_data );
+    mqtt_ctrl_register_subscription("OUTPUTS/GPIO/SET_PULSE", app_ouput_find_pulse_data );
 
    return CF_DISABLE;      
 }
