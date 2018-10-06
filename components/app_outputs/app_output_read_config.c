@@ -8,25 +8,67 @@
 #include "msgpack_rx_handler.h"
 #include "app_output_read_config.h"
 
+static uint32_t      pin_count;
+static uint32_t    int_value_count;
 
+static uint32_t *pin_array;
+static uint32_t *int_value_array;
+
+static bool action_pins_in_ref( int test_pin )
+{
+    
+    for(int i = 0; i<pin_count;i++)
+    {
+        if( test_pin == pin_array[i])
+        {
+            
+            return true;
+        }
+        
+    }
+    return false;
+    
+    
+    
+}
+
+static bool verifiy_output_pins(int count, uint32_t *action_pins)
+{
+    if( count > pin_count ) { return false;}
+    for(int i = 0; i <count;i++)
+    {
+        if( action_pins_in_ref(action_pins[i]) != true)
+        {
+            return false;
+        }
+        
+        
+        
+    }
+    return true;
+    
+    
+    
+}
 
 
 bool app_output_read_file_configuration( void )
 {
     bool          return_value;
-   
+    cmp_ctx_t ctx;
     char     *buffer;
     uint32_t buffer_size = 1000;
-    cmp_ctx_t ctx;
-     
+    
+    
     if( msgpack_rx_handler_file(&ctx,"/spiffs/IO_OUT.MPK",  &buffer,&buffer_size ) != true)
     {
-         printf("############## cannot read file \n");
+        
          return false;
     }
    
-
+    
     return_value = app_output_find_set_configuration( buffer_size, buffer);
+    
     free(buffer);
     return return_value;    
     
@@ -39,11 +81,7 @@ bool  app_output_find_set_configuration( uint32_t data_len, char *data)
 
 
  
-    uint32_t      pin_count;
-    uint32_t    int_value_count;
 
-    uint32_t *pin_array;
-    uint32_t *int_value_array;
    
     cmp_ctx_t ctx;
     uint32_t *pin_ptr;
@@ -55,7 +93,7 @@ bool  app_output_find_set_configuration( uint32_t data_len, char *data)
     {
         goto exit;
     }
-    if( msgpack_rx_handler_find_array_count(&ctx,"pullup_array",&int_value_count) != true )
+    if( msgpack_rx_handler_find_array_count(&ctx,"init_values",&int_value_count) != true )
     {
          goto exit;
     }
@@ -81,7 +119,7 @@ bool  app_output_find_set_configuration( uint32_t data_len, char *data)
 
            goto exit;
       }
-      if( msgpack_rx_handler_find_array_unsigned(&ctx,"pullup",&int_value_count,int_value_array) != true )
+      if( msgpack_rx_handler_find_array_unsigned(&ctx,"init_values",&int_value_count,int_value_array) != true )
       {
           free(pin_array);
           free(int_value_array);
@@ -122,12 +160,13 @@ bool  app_output_find_set_data( uint32_t data_len, char *data)
     cmp_ctx_t ctx;
     uint32_t *pin_ptr;
     uint32_t *int_value_ptr;
+
      msgpack_rx_handler_init(&ctx, data, data_len);
      if( msgpack_rx_handler_find_array_count(&ctx,"pins",&pin_count) != true )
     {
         goto exit;
     }
-    if( msgpack_rx_handler_find_array_count(&ctx,"pullup_array",&int_value_count) != true )
+    if( msgpack_rx_handler_find_array_count(&ctx,"init_values",&int_value_count) != true )
     {
          goto exit;
     }
@@ -152,14 +191,14 @@ bool  app_output_find_set_data( uint32_t data_len, char *data)
 
            goto exit;
       }
-      if( msgpack_rx_handler_find_array_unsigned(&ctx,"pullup",&int_value_count,int_value_array) != true )
+      if( msgpack_rx_handler_find_array_unsigned(&ctx,"init_values",&int_value_count,int_value_array) != true )
       {
           free(pin_array);
           free(int_value_array);
           
           goto exit;
       }
- 
+      if( verifiy_output_pins(pin_count,pin_array) == false){return false;}
       for(int i=0;i<pin_count;i++)    
       {
 
@@ -217,6 +256,8 @@ bool app_output_find_pulse_data( uint32_t data_len, char *data,
          return false;
          
      }
+     if( verifiy_output_pins(1,pulse_pin) == false){return false;}
+
      return true;
     
 }
