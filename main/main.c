@@ -58,6 +58,7 @@
 #include "mqtt_ctrl.h"
 #include "app_input_main.h"
 #include "app_output_main.h"
+#include "app_pwm_setup.h"
 
 
                                 
@@ -96,7 +97,7 @@ void app_main(void)
 
 
     
-    initialize_watchdog(30, true);
+    initialize_watchdog(10, true);
     wdt_task_subscribe();
     
    initialize_serial_heart_beat();
@@ -104,6 +105,7 @@ void app_main(void)
 
    initialize_app_input_main(); 
    initialize_app_output_main(); 
+   initialize_app_pwm_main();
     while(1)
     {
       

@@ -160,7 +160,7 @@ bool  app_output_find_set_data( uint32_t data_len, char *data)
     cmp_ctx_t ctx;
     uint32_t *pin_ptr;
     uint32_t *int_value_ptr;
-
+     //printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
      msgpack_rx_handler_init(&ctx, data, data_len);
      if( msgpack_rx_handler_find_array_count(&ctx,"pins",&pin_count) != true )
     {
@@ -198,18 +198,21 @@ bool  app_output_find_set_data( uint32_t data_len, char *data)
           
           goto exit;
       }
+      //printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ \n");
       if( verifiy_output_pins(pin_count,pin_array) == false){return false;}
+      //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
       for(int i=0;i<pin_count;i++)    
       {
 
-          
+          //printf("############################ pin %d \n",*pin_ptr);
+          //printf("############################ pin %d \n",*int_value_ptr);
            gpio_set_value(*pin_ptr, *int_value_ptr);
            pin_ptr++;
            int_value_ptr++;
            
       }
       free(int_value_array);
-      
+      //printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
       return true;
      
       
@@ -236,22 +239,22 @@ bool app_output_find_pulse_data( uint32_t data_len, char *data,
     cmp_ctx_t ctx;
 
      msgpack_rx_handler_init(&ctx, data, data_len);
-     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_PIN", (unsigned*)pulse_pin) != true )
+     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_PIN", pulse_pin) != true )
      {
          return false;
          
      }
-     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_STARTING_VALUE", (unsigned*)&pulse_starting_value) != true )
+     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_STARTING_VALUE", pulse_starting_value) != true )
      {
          return false;
          
      }
-     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_ENDING_VALUE",(unsigned*) &pulse_ending_value) != true )
+     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_ENDING_VALUE",pulse_ending_value) != true )
      {
          return false;
          
      }
-     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_TIME_TICK",(unsigned*) &pulse_time_ticks) != true)
+     if(  msgpack_rx_handler_find_unsigned(&ctx,"PULSE_TIME_TICK",pulse_time_ticks) != true)
      {
          return false;
          

@@ -123,11 +123,15 @@ static bool build_buffer(int *input_number)
         }
         if( temp == '\n')
         {
-           
             input_index -= 1;
             input_buffer[input_index]=0;
             *input_number = input_index;
-            
+             if(input_index < 6 )
+            {
+                return false;
+                
+            }
+           
              return true;
         }
         temp = getchar();
