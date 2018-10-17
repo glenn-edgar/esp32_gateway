@@ -1598,13 +1598,18 @@ bool cmp_read_float(cmp_ctx_t *ctx, float *f) {
   if (!cmp_read_object(ctx, &obj))
     return false;
 
-  if (obj.type != CMP_TYPE_FLOAT) {
+  if ( (obj.type != CMP_TYPE_FLOAT)&&(obj.type != CMP_TYPE_DOUBLE)) {
     ctx->error = INVALID_TYPE_ERROR;
     return false;
   }
-
+  if(obj.type == CMP_TYPE_FLOAT)
+  {
   *f = obj.as.flt;
-
+  }
+  else
+  {
+      *f = obj.as.dbl;
+  }
   return true;
 }
 

@@ -214,7 +214,7 @@ bool msgpack_rx_handler_find_float(cmp_ctx_t *ctx,char *field_name, float *data 
     
     if( cmp_read_map(ctx, &map_size) != true) {return false;}
   
-    
+    //printf("map size is %d \n",map_size);
     for(int i = 0;i < map_size; i++)
     {  
        
@@ -517,12 +517,12 @@ bool msgpack_rx_handler_get_binary_array(cmp_ctx_t *ctx,char *field_name,uint32_
            }
            for(int j = 0;j < size; j++)
            {
-             if( msgpack_rx_handler_scoop_field(ctx,(void **) &buffer[i], &buffer_size[i]) == false)
+             if( msgpack_rx_handler_scoop_field(ctx, (void **) &buffer[j], &buffer_size[j]) == false)
              {
                  return false;
              }
-             buffer++;
-           
+            
+             //printf("%d buffer size %d buffer pointer %p \n",j, buffer_size[i],buffer[j]);
            }
            
            return true;
@@ -595,6 +595,7 @@ bool  msgpack_rx_handler_scoop_field(cmp_ctx_t  *ctx, void **data, uint32_t *siz
     
     number_to_skip -= 1;
     *data = cmp_return_current_buffer(ctx);
+   
     
     return_value = analyize_current_object(ctx, &obj, &number_to_skip, &temp_size);
     
@@ -622,7 +623,7 @@ bool  msgpack_rx_handler_scoop_field(cmp_ctx_t  *ctx, void **data, uint32_t *siz
     
     
    *size = cmp_return_current_buffer(ctx) - (char *)*data;
-    
+    //printf("############################## size %d data pointer %p \n",*size,*data);
     return return_value;
     
     

@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <esp_types.h>
 #include "mqtt_client.h"
 #include "mqtt_ctrl.h"
@@ -74,6 +76,7 @@ void initialize_app_pwm_main(void)
     pwm_channel_number = 0;
     memset(pwm_channel,0,sizeof(pwm_channel));
     initialize_timer_units();
+   
     if( app_pwm_read_file_configuration( ) == true)
     {
        mqtt_ctrl_register_subscription("OUTPUTS/PWM/DUTY", app_pwm_duty );
@@ -276,39 +279,48 @@ static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *d
    uint32_t frequency;
    float    duty_a;
    float    duty_b;
-   msgpack_rx_handler_init(&ctx, data, data_len);   
-
+   msgpack_rx_handler_init(&ctx, data, data_len); 
+   
+   
    if( msgpack_rx_handler_find_float(&ctx,"duty_a", &duty_a ) == false)
    {
        return false;
        
-   }   
+   }  
+    
    if( msgpack_rx_handler_find_float(&ctx,"duty_b", &duty_b )== false)
    {
        return false;
        
    }   
+   
    if( msgpack_rx_handler_find_unsigned(&ctx,"frequency", &frequency ) == false)
    {
        return false;
        
-   }   
+   }  
+     
    if( msgpack_rx_handler_find_unsigned(&ctx,"pin_a", &pin_a ) == false)
    {
        return false;
        
    }   
-
+    
     if( msgpack_rx_handler_find_unsigned(&ctx,"pin_b", &pin_b ) == false)
    {
        return false;
        
    }   
+   printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!settup hardqare \n");
+   printf("duty cycle %f %f \n",duty_a,duty_b);
+   printf("frequency %d  pina %d pinb %d \n",frequency,pin_a,pin_b);
+   printf("timerid  %d \n",timer_id);
    pwm_channel[timer_id].pin_a = pin_a;
    pwm_channel[timer_id].pin_b = pin_b;
    pwm_channel[timer_id].frequency = frequency;
    pwm_channel[timer_id].duty_a = duty_a;
    pwm_channel[timer_id].duty_b = duty_b;
+
    mcpwm_config_t pwm_config;
    pwm_config.frequency = frequency;    
    pwm_config.cmpr_a = duty_a;       
@@ -335,6 +347,8 @@ static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *d
     
 }
 
+static uint32_t binary_length[ MCPWM_TIMER_MAX ];
+static char   *binary_buffer[ MCPWM_TIMER_MAX];
 
 
 static bool  app_pwm_find_set_configuration(  uint32_t data_len, char *data)
@@ -342,28 +356,31 @@ static bool  app_pwm_find_set_configuration(  uint32_t data_len, char *data)
 
    
     cmp_ctx_t ctx;
-    uint32_t timer_count;
-    uint32_t binary_length[ MCPWM_TIMER_MAX ];
-    char     *binary_buffer[ MCPWM_TIMER_MAX];
-
+    uint32_t pwm_count;
+    
     msgpack_rx_handler_init(&ctx, data, data_len);
+    
+    if( msgpack_rx_handler_find_array_count(&ctx,"PWM_OUTPUTS",&pwm_count) != true )
+    {
+        return false;
+    }
+   
+    if(pwm_count >= MCPWM_TIMER_MAX){ return false; }
+    pwm_channel_number = pwm_count;
+    
+   
+    if(msgpack_rx_handler_get_binary_array(&ctx,"PWM_OUTPUTS",&pwm_count,binary_length,binary_buffer) == false)
+    {
+       
+        return false;
+    }
 
-    if( msgpack_rx_handler_find_array_count(&ctx,"timers",&timer_count) != true )
+    for(int i = 0; i< pwm_count ;i++)
     {
-        return false;
-    }
-    if(timer_count >= MCPWM_TIMER_MAX){ return false; }
-    pwm_channel_number = timer_count;
-    
-    
-    if(msgpack_rx_handler_get_binary_array(&ctx,"timers",&timer_count,binary_length,binary_buffer) == false)
-    {
-        return false;
-    }
-    for(int i = 0; i< timer_count ;i++)
-    {
+       
        if( app_pwm_process_buffer(i, binary_length[i],binary_buffer[i]) == false)
        {
+           
            return false;
        }
        

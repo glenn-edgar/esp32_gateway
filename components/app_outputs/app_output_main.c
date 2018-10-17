@@ -22,28 +22,18 @@ static void load_chain_flow_data( CHAIN_FLOW_HANDLE *cf );
 
 void initialize_app_output_main(void)
 {
-       app_output_read_file_configuration(  );
-       xTaskCreate( app_output_task, "APP_OUTPUT_TASK",4000, NULL, 20, &xHandle );
-       configASSERT( xHandle );
+       if( app_output_read_file_configuration(  ) == true)
+       {
+         xTaskCreate( app_output_task, "APP_OUTPUT_TASK",4000, NULL, 20, &xHandle );
+         configASSERT( xHandle );
+       }
    
     
 }
 static inline void  process_status_data( CHAIN_FLOW_HANDLE *cf, unsigned status_data)
 {
 
-#if 0   
-    if( status_data &  CF_PROCESS_TIMER_TICK )
-    {
-        cf_process_cf_event( CF_TIME_TICK_EVENT, TICK_INTERVAL );
-        cf_status_clear_bit(  CF_PROCESS_TIMER_TICK );
-    }
-    if( status_data & CF_PROCESS_MODBUS )
-    {
-      pat_watch_dog(0,0,0,0,0,0);  // parameters for pat_watch_dog is not used
-      process_rx_modbus_rtu_message( );
-      cf_status_clear_bit(  CF_PROCESS_MODBUS );
-    }
-#endif
+;
     
 }
 
