@@ -183,7 +183,7 @@ static void send_mqtt_message(uint32_t counter_number)
    msg_dict_pack_array(&msg_pack[pack_index++],"DATA",counter_number);
    for(  int i = 0;i<counter_number;i++)
    {
-      msg_dict_pack_map(&msg_pack[pack_index++],"COUNTER_DATA", 3);
+      msg_dict_pack_map(&msg_pack[pack_index++],"COUNTER_DATA", 2);
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"GPIO_PIN", app_pulse_counters[i].gpio_pin);
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"COUNTS", app_pulse_counters[i].pulse_counts);
        

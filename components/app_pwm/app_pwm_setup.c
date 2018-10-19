@@ -10,6 +10,8 @@
 #include "driver/mcpwm.h"
 #include "msgpack_rx_handler.h"
 #include "app_output_read_config.h"
+#include "msg_dict_stream.h"
+#include "app_pwm_setup.h"
 
 
 
@@ -37,37 +39,35 @@ PWM_CHANNEL_T pwm_channel[MCPWM_TIMER_MAX];
 
 
 
-static void app_pwm_duty( esp_mqtt_client_handle_t mqtt_client,
+static void app_pwm_change_duty( esp_mqtt_client_handle_t mqtt_client,
                           uint32_t topic_len,
                           char *topic, 
                           uint32_t data_len, 
                           char *data  );
-                          
+    
+
+static void app_pwm_read_duty( esp_mqtt_client_handle_t mqtt_client,
+                          uint32_t topic_len,
+                          char *topic, 
+                          uint32_t data_len, 
+                          char *data  );
+    
 static bool app_pwm_read_file_configuration( void );
 
 
 static bool  app_pwm_find_set_configuration(  uint32_t data_len, char *data);
+static bool  app_pwm_find_set_configuration_a(  uint32_t data_len, char *data);
 static void initialize_timer_units(void);
-static bool app_pwm_read_pwm_duty( uint32_t data_len, char *data, uint32_t *timer_number,
-                                   float *duty_cycle_a, float *duty_cycle_b);
-                                   
-static void app_pwm_change_pwm_duty( uint32_t timer_number,
-                             float duty_cycle_a,
-                             float duty_cycle_b );
+
+
                              
-static void app_pwm_frequency( esp_mqtt_client_handle_t mqtt_client,
-                                 uint32_t topic_len,
-                                 char *topic, 
-                                 uint32_t data_len, 
-                                char *data  );
-                             
+static bool app_pwm_process_buffer_a(uint32_t timer_id,uint32_t data_len , char *data);
+static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *data);                             
  
-static bool app_pwm_read_frequency( uint32_t data_len,
-                      char *data,                            
-                      uint32_t *timer_number,
-                      uint32_t *frequency); 
+                   
                       
-static void app_pwm_change_pwm_frequency(uint32_t timer_number, uint32_t frequency );
+                      
+
 
 
                              
@@ -79,54 +79,75 @@ void initialize_app_pwm_main(void)
    
     if( app_pwm_read_file_configuration( ) == true)
     {
-       mqtt_ctrl_register_subscription("OUTPUTS/PWM/DUTY", app_pwm_duty );
-       mqtt_ctrl_register_subscription("OUTPUTS/PWM/FREQUENCY", app_pwm_frequency );
+       mqtt_ctrl_register_subscription("OUTPUTS/PWM/CHANGE_DUTY", app_pwm_change_duty );
+       mqtt_ctrl_register_subscription("OUTPUTS/PWM/READ_DUTY", app_pwm_read_duty );
     }
         
 }
     
-static void app_pwm_duty( esp_mqtt_client_handle_t mqtt_client,
+static void app_pwm_change_duty( esp_mqtt_client_handle_t mqtt_client,
                           uint32_t topic_len,
                           char *topic, 
                           uint32_t data_len, 
                           char *data  )
 {
 
-   uint32_t timer_number;
-   float duty_cycle_a; 
-   float duty_cycle_b; 
-   
-   if( app_pwm_read_pwm_duty(data_len,
-                             data,                            
-                             &timer_number,
-                             &duty_cycle_a,
-                             &duty_cycle_b ) == true)
-   {
-       app_pwm_change_pwm_duty(timer_number,duty_cycle_a,duty_cycle_b );
-   }       
+
+  app_pwm_find_set_configuration_a( data_len, data); 
+                        
+ 
+       
+          
 }                          
 
 
-static void app_pwm_frequency(  esp_mqtt_client_handle_t mqtt_client,
+static void app_pwm_read_duty(  esp_mqtt_client_handle_t mqtt_client,
                                  uint32_t topic_len,
                                  char *topic, 
                                  uint32_t data_len, 
                                 char *data  )
                                 
-                                {
 
-   uint32_t timer_number;
-   uint32_t frequency;
-
-   if( app_pwm_read_frequency(data_len,
-                             data,                            
-                             &timer_number,
-                             &frequency) == true)
-
+{
+   MSG_PACK_ELEMENT *msg_pack;
+   uint32_t  pack_index= 0;
+   uint32_t  msg_pack_number;
+   int       pack_buffer_size;
+   char      *pack_buffer;
+   
+   msg_pack_number = 6*pwm_channel_number+2;
+   msg_pack_number +=4; //safety
+   
+   msg_pack = malloc(msg_pack_number*sizeof(MSG_PACK_ELEMENT));
+   
+   msg_dict_pack_string(&msg_pack[pack_index++],"TOPIC","OUTPUTS/PWM/READ_DUTY"); 
+   
+   
+   msg_dict_pack_array(&msg_pack[pack_index++],"DATA",pwm_channel_number);
+   for(  int i = 0;i<pwm_channel_number;i++)
    {
-       app_pwm_change_pwm_frequency(timer_number,frequency );
-   }       
-} 
+      msg_dict_pack_map(&msg_pack[pack_index++],"PWM_DATA", 5);
+      msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"GPIO_PIN_A", pwm_channel[i].pin_a);
+      msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"GPIO_PIN_B", pwm_channel[i].pin_b);
+      msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"FREQUENCY", pwm_channel[i].frequency);
+      msg_dict_pack_float(&msg_pack[pack_index++],"DUTY_A", pwm_channel[i].duty_a);
+      msg_dict_pack_float(&msg_pack[pack_index++],"DUTY_B", pwm_channel[i].duty_b);
+       
+       
+   }
+   
+ 
+   pack_buffer = msg_dict_stream( &pack_buffer_size,pack_index,msg_pack);
+   
+   mqtt_clt_publish("OUTPUTS/PWM/READ_DUTY", pack_buffer,pack_buffer_size );
+   free(pack_buffer);
+   free(msg_pack);
+ 
+    
+    
+}      
+
+ 
                                 
 
 static bool app_pwm_read_file_configuration( void ) 
@@ -179,29 +200,8 @@ static void initialize_timer_units( void )
 
 
    
-static void app_pwm_change_pwm_duty( uint32_t timer_number,
-                             float duty_cycle_a,
-                             float duty_cycle_b )
-{
-    
-    
-    pwm_channel[timer_number].duty_a = duty_cycle_a;
-    pwm_channel[timer_number].duty_b = duty_cycle_b;
-    mcpwm_set_duty(pwm_channel[timer_number].unit_id,timer_number, MCPWM_OPR_A,duty_cycle_a);  
-    mcpwm_set_duty(pwm_channel[timer_number].unit_id,timer_number, MCPWM_OPR_B,duty_cycle_b);
-     
- }
+                   
 
-                      
-static void app_pwm_change_pwm_frequency(uint32_t timer_number, uint32_t frequency )
-{
-    
-    
-    pwm_channel[timer_number].frequency = frequency;
-    mcpwm_set_frequency(pwm_channel[timer_number].unit_id,timer_number, frequency);  
-      
-    
-}
    
     
                           
@@ -212,64 +212,8 @@ static void app_pwm_change_pwm_frequency(uint32_t timer_number, uint32_t frequen
 **
 */
 
-static bool app_pwm_read_frequency( uint32_t data_len,
-                      char *data,                            
-                      uint32_t *timer_index,
-                      uint32_t *frequency)                       
-
-{
-
-     
-     cmp_ctx_t ctx;
-     msgpack_rx_handler_init(&ctx, data, data_len);
-
-      if(msgpack_rx_handler_find_unsigned(&ctx,"timer_index", timer_index) == false)
-     {
-         return false;
-     }  
- 
-     if(msgpack_rx_handler_find_unsigned(&ctx,"frequency", frequency) == false)
-     {
-         return false;
-     } 
- 
-     // checking inputs
-     
-     if(*timer_index >=pwm_channel_number){return false;}
-    
-    
-     
-   return true;                                       
-}
+   
                       
-                      
-static bool app_pwm_read_pwm_duty( uint32_t data_len, char *data, uint32_t *timer_number,
-                                   float *duty_cycle_a, float *duty_cycle_b)
-{
-     cmp_ctx_t ctx;
-     msgpack_rx_handler_init(&ctx, data, data_len);
-
-     if( msgpack_rx_handler_find_unsigned(&ctx,"timer", timer_number ) == false)
-     {
-         return false;
-     }     
-     if(msgpack_rx_handler_find_float(&ctx,"duty_a", duty_cycle_a ) == false)
-     {
-         return false;
-     }    
-     if(msgpack_rx_handler_find_float(&ctx,"duty_b", duty_cycle_b ) == false)
-     {
-         return false;
-     }     
-     // checking inputs
-     
-     if(*timer_number >=pwm_channel_number){return false;}
-    
-    
-     
-   return true;                                       
-}
-
 
 static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *data)
 {
@@ -347,14 +291,14 @@ static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *d
     
 }
 
-static uint32_t binary_length[ MCPWM_TIMER_MAX ];
-static char   *binary_buffer[ MCPWM_TIMER_MAX];
 
 
 static bool  app_pwm_find_set_configuration(  uint32_t data_len, char *data)
 { 
 
-   
+    uint32_t binary_length[ MCPWM_TIMER_MAX ];
+    char   *binary_buffer[ MCPWM_TIMER_MAX];
+
     cmp_ctx_t ctx;
     uint32_t pwm_count;
     
@@ -392,5 +336,87 @@ static bool  app_pwm_find_set_configuration(  uint32_t data_len, char *data)
     
 }
 
+static bool  app_pwm_find_set_configuration_a(  uint32_t data_len, char *data)
+{ 
 
+    uint32_t binary_length[ MCPWM_TIMER_MAX ];
+    char   *binary_buffer[ MCPWM_TIMER_MAX];
+
+    cmp_ctx_t ctx;
+    uint32_t pwm_count;
+    
+    msgpack_rx_handler_init(&ctx, data, data_len);
+    
+    if( msgpack_rx_handler_find_array_count(&ctx,"PWM_OUTPUTS",&pwm_count) != true )
+    {
+        return false;
+    }
+   
+    if(pwm_count >= MCPWM_TIMER_MAX){ return false; }
+    pwm_channel_number = pwm_count;
+    
+   
+    if(msgpack_rx_handler_get_binary_array(&ctx,"PWM_OUTPUTS",&pwm_count,binary_length,binary_buffer) == false)
+    {
+       
+        return false;
+    }
+
+    for(int i = 0; i< pwm_count ;i++)
+    {
+       
+       if( app_pwm_process_buffer_a(i, binary_length[i],binary_buffer[i]) == false)
+       {
+           
+           return false;
+       }
+       
+    }
+
+   
+    return true;       
+    
+    
+}
+
+static bool app_pwm_process_buffer_a(uint32_t timer_id,uint32_t data_len , char *data)
+{
+   cmp_ctx_t ctx;
+
+   float    duty_a;
+   float    duty_b;
+   msgpack_rx_handler_init(&ctx, data, data_len); 
+   
+   
+   if( msgpack_rx_handler_find_float(&ctx,"duty_a", &duty_a ) == false)
+   {
+       return false;
+       
+   }  
+    
+   if( msgpack_rx_handler_find_float(&ctx,"duty_b", &duty_b )== false)
+   {
+       return false;
+       
+   }   
+   
+   
+
+   pwm_channel[timer_id].duty_a = duty_a;
+   pwm_channel[timer_id].duty_b = duty_b;
+   if(timer_id < 3)
+   {
+       mcpwm_set_duty(0, timer_id,MCPWM_OPR_A, duty_a);
+       mcpwm_set_duty(0, timer_id, MCPWM_OPR_B, duty_b);
+   }
+   else
+   {
+       mcpwm_set_duty(0, timer_id,MCPWM_OPR_A, duty_a);
+       mcpwm_set_duty(0, timer_id, MCPWM_OPR_B, duty_b);       
+       
+   }
+    
+   return true;
+    
+}
 
