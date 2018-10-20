@@ -61,7 +61,7 @@ static void initialize_timer_units(void);
 
 
                              
-static bool app_pwm_process_buffer_a(uint32_t timer_id,uint32_t data_len , char *data);
+static bool app_pwm_process_buffer_a(uint32_t index,uint32_t data_len , char *data);
 static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *data);                             
  
                    
@@ -80,7 +80,7 @@ void initialize_app_pwm_main(void)
     if( app_pwm_read_file_configuration( ) == true)
     {
        mqtt_ctrl_register_subscription("OUTPUTS/PWM/CHANGE_DUTY", app_pwm_change_duty );
-       mqtt_ctrl_register_subscription("OUTPUTS/PWM/READ_DUTY", app_pwm_read_duty );
+       mqtt_ctrl_register_subscription("OUTPUTS/PWM/REQUEST_DUTY", app_pwm_read_duty );
     }
         
 }
@@ -115,30 +115,35 @@ static void app_pwm_read_duty(  esp_mqtt_client_handle_t mqtt_client,
    int       pack_buffer_size;
    char      *pack_buffer;
    
-   msg_pack_number = 6*pwm_channel_number+2;
+ 
+   msg_pack_number = 6*pwm_channel_number+3;
    msg_pack_number +=4; //safety
+   pack_index = 0;
    
    msg_pack = malloc(msg_pack_number*sizeof(MSG_PACK_ELEMENT));
    
    msg_dict_pack_string(&msg_pack[pack_index++],"TOPIC","OUTPUTS/PWM/READ_DUTY"); 
    
-   
+  
    msg_dict_pack_array(&msg_pack[pack_index++],"DATA",pwm_channel_number);
    for(  int i = 0;i<pwm_channel_number;i++)
    {
-      msg_dict_pack_map(&msg_pack[pack_index++],"PWM_DATA", 5);
+      msg_dict_pack_map(&msg_pack[pack_index++],NULL, 5);
+
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"GPIO_PIN_A", pwm_channel[i].pin_a);
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"GPIO_PIN_B", pwm_channel[i].pin_b);
+
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"FREQUENCY", pwm_channel[i].frequency);
+
       msg_dict_pack_float(&msg_pack[pack_index++],"DUTY_A", pwm_channel[i].duty_a);
       msg_dict_pack_float(&msg_pack[pack_index++],"DUTY_B", pwm_channel[i].duty_b);
-       
+      
        
    }
    
  
    pack_buffer = msg_dict_stream( &pack_buffer_size,pack_index,msg_pack);
-   
+   printf("pack_buffer_size %d \n",pack_buffer_size);
    mqtt_clt_publish("OUTPUTS/PWM/READ_DUTY", pack_buffer,pack_buffer_size );
    free(pack_buffer);
    free(msg_pack);
@@ -361,10 +366,10 @@ static bool  app_pwm_find_set_configuration_a(  uint32_t data_len, char *data)
        
         return false;
     }
-
+  
     for(int i = 0; i< pwm_count ;i++)
     {
-       
+      
        if( app_pwm_process_buffer_a(i, binary_length[i],binary_buffer[i]) == false)
        {
            
@@ -373,16 +378,16 @@ static bool  app_pwm_find_set_configuration_a(  uint32_t data_len, char *data)
        
     }
 
-   
+   printf("made it here done\n");
     return true;       
     
     
 }
 
-static bool app_pwm_process_buffer_a(uint32_t timer_id,uint32_t data_len , char *data)
+static bool app_pwm_process_buffer_a(uint32_t index,uint32_t data_len , char *data)
 {
    cmp_ctx_t ctx;
-
+   uint32_t timer_id;
    float    duty_a;
    float    duty_b;
    msgpack_rx_handler_init(&ctx, data, data_len); 
@@ -399,20 +404,27 @@ static bool app_pwm_process_buffer_a(uint32_t timer_id,uint32_t data_len , char 
        return false;
        
    }   
-   
-   
-
+   if(msgpack_rx_handler_find_unsigned(&ctx,"timer_id",&timer_id) == false)
+   {
+       return false;
+   }    
+   if( timer_id >= pwm_channel_number)
+   {
+       return false;
+   }
    pwm_channel[timer_id].duty_a = duty_a;
    pwm_channel[timer_id].duty_b = duty_b;
+   
    if(timer_id < 3)
    {
-       mcpwm_set_duty(0, timer_id,MCPWM_OPR_A, duty_a);
-       mcpwm_set_duty(0, timer_id, MCPWM_OPR_B, duty_b);
+       mcpwm_set_duty(0, timer_id,timer_id*2, duty_a);
+       mcpwm_set_duty(0, timer_id, (timer_id*2)+1, duty_b);
    }
    else
    {
-       mcpwm_set_duty(0, timer_id,MCPWM_OPR_A, duty_a);
-       mcpwm_set_duty(0, timer_id, MCPWM_OPR_B, duty_b);       
+       timer_id = timer_id -3;
+       mcpwm_set_duty(1, timer_id,timer_id*2, duty_a);
+       mcpwm_set_duty(1, timer_id, (timer_id*2)+1, duty_b);       
        
    }
     
