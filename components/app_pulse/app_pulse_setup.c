@@ -41,15 +41,22 @@ static inline void setup_a_pulse_counter( uint32_t counter, uint32_t gpio_pin, u
     pcnt_config.pulse_gpio_num = gpio_pin;
     pcnt_config.ctrl_gpio_num = -1;
     pcnt_config.unit = counter;
+    pcnt_config.channel = PCNT_CHANNEL_0,
+    pcnt_config.lctrl_mode = PCNT_MODE_KEEP, // Reverse counting direction if low
+    pcnt_config.hctrl_mode = PCNT_MODE_KEEP,    // Keep the primary counter mode if high
+
     pcnt_config.pos_mode = PCNT_COUNT_INC;   // Count up on the positive edge
-    pcnt_config.neg_mode = PCNT_COUNT_INC;   // Keep the counter value on the negative edge
+    pcnt_config.neg_mode = PCNT_COUNT_INC;   // Keep the counter value on the negative edgePCNT_COUNT_DIS
     pcnt_config.counter_h_lim = 0x7fff;
     pcnt_config.counter_l_lim = 0;
 
 
     /* Initialize PCNT unit */
+    
     pcnt_unit_config(&pcnt_config);
+    
     pcnt_set_filter_value(counter, min_pulse_length);
+    
     pcnt_counter_clear(counter);
     pcnt_counter_resume(counter);
 
@@ -97,7 +104,7 @@ static inline void read_counter_values(uint32_t number_of_counters)
 {
     for(int i = 0; i< number_of_counters;i++)
     {
-       app_pulse_counters[i].pulse_counts =   read_a_counter( i);
+       app_pulse_counters[i].pulse_counts +=   read_a_counter( i);
         
         
     }
@@ -183,7 +190,7 @@ static void send_mqtt_message(uint32_t counter_number)
    msg_dict_pack_array(&msg_pack[pack_index++],"DATA",counter_number);
    for(  int i = 0;i<counter_number;i++)
    {
-      msg_dict_pack_map(&msg_pack[pack_index++],"COUNTER_DATA", 2);
+      msg_dict_pack_map(&msg_pack[pack_index++],NULL, 2);
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"GPIO_PIN", app_pulse_counters[i].gpio_pin);
       msg_dict_pack_unsigned_integer(&msg_pack[pack_index++],"COUNTS", app_pulse_counters[i].pulse_counts);
        
@@ -193,7 +200,7 @@ static void send_mqtt_message(uint32_t counter_number)
  
    pack_buffer = msg_dict_stream( &pack_buffer_size,pack_index,msg_pack);
    
-   mqtt_clt_publish("INPUT/GPIO/VALUE", pack_buffer,pack_buffer_size );
+   mqtt_clt_publish("INPUT/PULSE_COUNT/VALUE", pack_buffer,pack_buffer_size );
    free(pack_buffer);
    free(msg_pack);
  
@@ -225,13 +232,13 @@ static bool app_pulse_read_file_configuration( void )
     
     if( msgpack_rx_handler_file(&ctx,"/spiffs/IO_PULSE.MPK" ,  &buffer,&buffer_size ) != true)
     {
-        
+         
          return false;
     }
    
-    
+    printf("found file \n");
     return_value = app_pulse_find_set_configuration(   buffer_size, buffer);
-    
+   
     free(buffer);
     return return_value;    
     
@@ -244,31 +251,34 @@ static bool app_pulse_find_set_configuration(   uint32_t size, char *buffer)
    uint32_t gpio_array[PCNT_UNIT_MAX];
     
    msgpack_rx_handler_init(&ctx, buffer, size);
-   if( msgpack_rx_handler_find_unsigned(&ctx,"COUNTER_NUMBER", &pulse_counter_number) != true )
-   {
-       return false;
-        
-   }
+   
    if( msgpack_rx_handler_find_unsigned(&ctx,"COUNTER_UPDATE_RATE", &pulse_update_rate) != true )
    {
+       
        return false;
         
    } 
    if( msgpack_rx_handler_find_unsigned(&ctx,"COUNTER_FILTER_COUNT", &pulse_filter_count ) != true )
    {
+       
        return false;
         
    }   
    array_count = PCNT_UNIT_MAX;
-   if( msgpack_rx_handler_find_array_unsigned(&ctx,"GPIO_PINS",&array_count, gpio_array) != true )
+   if(msgpack_rx_handler_find_array_count(&ctx,"GPIO_PINS",&array_count) == false)
    {
-       return false;
-        
-   }    
-   if( array_count != pulse_counter_number )
-   {
+       
        return false;
    }
+   if( msgpack_rx_handler_find_array_unsigned(&ctx,"GPIO_PINS",&array_count, gpio_array) != true )
+   {
+        
+       return false;
+        
+   } 
+   pulse_counter_number = array_count;   
+
+   
    for(int i = 0; i< pulse_counter_number;i++)
    {
        

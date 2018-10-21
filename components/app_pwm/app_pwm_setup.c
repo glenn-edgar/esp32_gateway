@@ -143,7 +143,7 @@ static void app_pwm_read_duty(  esp_mqtt_client_handle_t mqtt_client,
    
  
    pack_buffer = msg_dict_stream( &pack_buffer_size,pack_index,msg_pack);
-   printf("pack_buffer_size %d \n",pack_buffer_size);
+   
    mqtt_clt_publish("OUTPUTS/PWM/READ_DUTY", pack_buffer,pack_buffer_size );
    free(pack_buffer);
    free(msg_pack);
@@ -260,10 +260,7 @@ static bool app_pwm_process_buffer(uint32_t timer_id,uint32_t data_len , char *d
        return false;
        
    }   
-   printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!settup hardqare \n");
-   printf("duty cycle %f %f \n",duty_a,duty_b);
-   printf("frequency %d  pina %d pinb %d \n",frequency,pin_a,pin_b);
-   printf("timerid  %d \n",timer_id);
+   
    pwm_channel[timer_id].pin_a = pin_a;
    pwm_channel[timer_id].pin_b = pin_b;
    pwm_channel[timer_id].frequency = frequency;
@@ -378,7 +375,7 @@ static bool  app_pwm_find_set_configuration_a(  uint32_t data_len, char *data)
        
     }
 
-   printf("made it here done\n");
+  
     return true;       
     
     
