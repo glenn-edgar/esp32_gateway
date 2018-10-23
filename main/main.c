@@ -60,6 +60,7 @@
 #include "app_output_main.h"
 #include "app_pwm_setup.h"
 #include "app_pulse_setup.h"
+#include "app_analog_main.h"
 
 
                                 
@@ -94,8 +95,6 @@ void app_main(void)
     wifi_init_sta();
 #endif
  
- 
-
 
     
     initialize_watchdog(20, true);
@@ -108,6 +107,7 @@ void app_main(void)
    initialize_app_output_main(); 
    initialize_app_pwm_main();
    initialize_app_pulse_main();
+   initialize_app_analog_main();
     while(1)
     {
       

@@ -27,12 +27,13 @@
 /*
  * In this example, we will test hardware timer0 and timer1 of timer group0.
  */
-void app_analog_main(void)
+void initialize_app_analog_main(void)
 {
     xQueueHandle timer_queue;
     xQueueHandle mqtt_queue;
 
-    app_analog_setup_dacs(); // these are only subscription 
+    app_analog_setup_dacs(); // these are only subscription
+#if 0    
     if(app_analog_find_analog_configuration_data() == true )
     {
        timer_queue = xQueueCreate(10, sizeof(APP_ANALOG_EVENT_STRUCTURE));
@@ -43,5 +44,6 @@ void app_analog_main(void)
        
        
     }
+#endif
 }
 
