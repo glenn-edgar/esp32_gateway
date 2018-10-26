@@ -29,7 +29,7 @@
  */
 void initialize_app_analog_main(void)
 {
-    xQueueHandle timer_queue;
+    
     xQueueHandle mqtt_queue;
 
     app_analog_setup_dacs(); // these are only subscription
@@ -37,13 +37,14 @@ void initialize_app_analog_main(void)
     if(app_analog_find_analog_configuration_data() == true )
     {
 
-       timer_queue = xQueueCreate(10, sizeof(APP_ANALOG_EVENT_STRUCTURE));
-       mqtt_queue = xQueueCreate(10,sizeof(APP_MQTT_STRUCTURE));
-#if 0       
-       app_analog_initialize_mqtt_task(  mqtt_queue );
-       app_analog_initialize_sampling_task( timer_queue, mqtt_queue);
        
-#endif       
+       mqtt_queue = xQueueCreate(10,sizeof(APP_MQTT_STRUCTURE));
+       
+       app_analog_initialize_mqtt_task(  mqtt_queue );
+       
+       app_analog_initialize_sampling_task(  mqtt_queue);
+       
+      
     }
 
 }

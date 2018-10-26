@@ -121,10 +121,10 @@ static void app_input_read_cb(esp_mqtt_client_handle_t mqtt_client,
 {
     uint32_t input_number;
     uint32_t *pins;  
-    printf("44444444444444444444444444made it here \n");
+    
     if( app_input_read_input( data_len, data, &input_number, &pins ) == true)
     {
-      printf("555555555555555555555555555 input_number %d \n",input_number);  
+      
       dump_gpio_values(input_number, pins);
       free(pins)  ;         
         
@@ -132,7 +132,7 @@ static void app_input_read_cb(esp_mqtt_client_handle_t mqtt_client,
     }
     else
     {
-        printf("44444444444444444444444444444444bad message \n");
+       ; 
     }
 
  

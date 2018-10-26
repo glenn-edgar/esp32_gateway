@@ -25,6 +25,7 @@ void mqtt_ctl_change_state( MQTT_STATE new_state);
 
 MQTT_STATE mqtt_ctl_get_state(void);
 
+void task_wait_for_mqtt_connection(void);
 
 
 void initialize_mqtt_client_handler( void);

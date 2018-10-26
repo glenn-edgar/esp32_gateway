@@ -13,6 +13,7 @@
 #include "lwip/netdb.h"
 
 #include "esp_log.h"
+#include "freertos/task.h"
 #include "mqtt_client.h"
 #include "mqtt_ctrl_load_setup_data.h"
 #include "wifi_station_setup.h"
@@ -69,6 +70,30 @@ static uint32_t base_topic_size;
 
 static void mqtt_ctl_wait_for_wifi_connect(void); 
 static void mqtt_ctl_setup_connection(void);
+
+void task_wait_for_mqtt_connection(void)
+{
+    
+    
+    MQTT_STATE  state;
+    while(1)
+    {    
+       state = mqtt_ctl_get_state();
+       if( (state == RESTORE_SUBSCRIPTIONS) || ( state ==MQTT_OPERATIONAL_STATE ))
+       {
+             return;
+       }    
+       else
+       {
+           vTaskDelay(100/ portTICK_PERIOD_MS); 
+       }           
+    }
+
+}
+    
+    
+    
+
 
 
 
