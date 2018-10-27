@@ -31,7 +31,7 @@ char * msg_dict_stream(  int *buff_size, int number,  MSG_PACK_ELEMENT *msg_pack
   output_size = allocate_buffer( number, msg_pack );
   output_buffer = malloc(output_size);
   msgpack_dict_stream_init(&ctx, output_buffer, output_size); 
-  printf("#############number %d  map number %d \n",number,map_number); 
+  
   cmp_write_map(&ctx,map_number);
  
   for(int i=0; i<number;i++)
@@ -184,14 +184,14 @@ static int find_map_number( int number, MSG_PACK_ELEMENT *msg_pack )
       switch(msg_pack->type)
       {
         case MSGPACK_MAP_TYPE:
-          printf("map found %d \n",msg_pack->size);
+       
           map_number -= msg_pack->size;
         break;
 
 
        
        case MSGPACK_ARRAY_TYPE:
-          printf("array found %d \n",msg_pack->size);
+         
           map_number -= msg_pack->size;
         break;
   

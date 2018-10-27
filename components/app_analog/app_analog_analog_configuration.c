@@ -71,7 +71,7 @@ static bool app_analog_process_buffer_a( uint32_t index, uint32_t data_len , cha
        return false;
        
    }  
-   printf("channel attenuation %d %d \n",channel,attenuation);
+   
    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
    esp_adc_cal_characterize(ADC_UNIT_1, attenuation, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
    ad1_control[index].adc_chars =adc_chars;

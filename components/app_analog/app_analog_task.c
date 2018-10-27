@@ -10,8 +10,7 @@
 #include "soc/timer_group_struct.h"
 #include "driver/periph_ctrl.h"
 #include "driver/timer.h"
-#include "soc/timer_group_struct.h"
-#include "driver/periph_ctrl.h"
+
 #include "driver/gpio.h"
 #include "mqtt_ctrl.h"
 #include "app_analog_mqtt_update.h"
@@ -106,10 +105,10 @@ static void analog_sampling_task(void *arg)
         if( ad_buffer_count >= mqtt_update_time)
         {
            ad_buffer_count = 0;
-           printf("sending mqtt data \n");       
+               
            pack_mqtt_data();
            xQueueSend(mqtt_queue, &mqtt_data, 0);
-           printf("sent mqtt data \n");           
+                  
         }
 
  
@@ -192,7 +191,7 @@ static void pack_mqtt_data(void)
 
 
 
-volatile int cnt = 0;
+
 void IRAM_ATTR timer_group0_isr(void *para)
 {// timer group 0, ISR
     int timer_idx = (int) para;
@@ -202,8 +201,7 @@ void IRAM_ATTR timer_group0_isr(void *para)
           TIMERG0.hw_timer[timer_idx].update = 1;
           TIMERG0.int_clr_timers.t0 = 1;
           TIMERG0.hw_timer[timer_idx].config.alarm_en = 1;
-          gpio_set_level(GPIO_NUM_16,cnt%2);
-          cnt++;
+
          
           xTaskNotifyFromISR( current_task_handle,
                        1,

@@ -9,6 +9,10 @@
 #include "driver/mcpwm.h"
 #include "msgpack_rx_handler.h"
 #include "msg_dict_stream.h"
+#include "watchdog.h"
+#include "soc/timer_group_struct.h"
+#include "driver/periph_ctrl.h"
+#include "driver/timer.h"
 
 #include "app_pulse_setup.h"
 
@@ -22,6 +26,7 @@ typedef struct
   
 }APP_PULSE_TIMER_CONTROL;
 
+
 static uint32_t pulse_update_rate;
 static uint32_t pulse_counter_number;
 static uint32_t pulse_filter_count;
@@ -30,6 +35,7 @@ static APP_PULSE_TIMER_CONTROL app_pulse_counters[PCNT_UNIT_MAX] ;
 static bool app_pulse_read_file_configuration( void );  
 static bool app_pulse_find_set_configuration(   uint32_t size, char *buffer);
 static void send_mqtt_message(uint32_t counter_number);
+
 
 
 
@@ -144,12 +150,20 @@ static void counter_task(void *arg)
 {
     uint32_t pulse_count;
     
+
+    
     pulse_count = 0;
+    pulse_update_rate = 15; // fifteen seconds
     setup_pulse_counters( pulse_counter_number);
     initialize_pulse_accumulators(pulse_counter_number);
+    task_wait_for_mqtt_connection();
+    
+    wdt_task_subscribe();
     while(1)
     {
-       vTaskDelay(1000/ portTICK_PERIOD_MS); 
+       wdt_reset_task_time();
+       vTaskDelay(1000 / portTICK_PERIOD_MS);
+        
        read_counter_values(pulse_counter_number);
        pulse_count +=1;
        if(pulse_count >= pulse_update_rate) 
@@ -236,7 +250,7 @@ static bool app_pulse_read_file_configuration( void )
          return false;
     }
    
-    printf("found file \n");
+
     return_value = app_pulse_find_set_configuration(   buffer_size, buffer);
    
     free(buffer);
@@ -287,6 +301,4 @@ static bool app_pulse_find_set_configuration(   uint32_t size, char *buffer)
    }
    return true;
 }
-   
-   
    

@@ -49,7 +49,7 @@ static void mqtt_packaging_queue(void *arg)
     {
         wdt_reset_task_time();
         if( xQueueReceive(mqtt_queue, &mqtt_structure,TWENTY_SECONDS) == 0){continue;}
-        printf("recieving mqtt data \n");
+        
         pack_index = 0;
         msg_dict_pack_string(&msg_pack[pack_index++],"TOPIC","INPUT/AD1/VALUE");
        
