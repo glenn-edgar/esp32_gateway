@@ -199,6 +199,47 @@ bool msgpack_rx_handler_find_integer(cmp_ctx_t *ctx,char *field_name, int32_t *d
     return false;
 }
 
+bool msgpack_rx_handler_find_boolean(cmp_ctx_t *ctx,char *field_name, bool *data )
+{
+    bool return_value;
+   
+    char *temp_pointer;
+    uint32_t   temp_size;
+    uint32_t   map_size;
+
+    
+    reset_buffer(ctx);
+    
+    
+    if( cmp_read_map(ctx, &map_size) != true) {return false;}
+  
+    
+    for(int i = 0;i < map_size; i++)
+    {  
+       
+       
+       return_value =  msgpack_rx_handler_get_bin_data_ptr(ctx,(void **)&temp_pointer,&temp_size );
+       
+       if(return_value != true){return return_value;}
+       
+       if( ctx_strcmp(field_name,temp_pointer,temp_size ) == true)
+       {
+          
+          
+          
+           return_value = cmp_read_bool(ctx,data);
+           
+           
+           return return_value;
+           
+           
+       }
+ 
+       msgpack_rx_handler_skip_field(ctx); 
+            
+    } 
+    return false;
+}
 
 bool msgpack_rx_handler_find_float(cmp_ctx_t *ctx,char *field_name, float *data )
 {

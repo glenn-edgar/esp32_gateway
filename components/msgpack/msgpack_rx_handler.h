@@ -25,7 +25,7 @@ bool msgpack_rx_handler_find_unsigned(cmp_ctx_t *ctx,char *field_name, uint32_t 
 
 bool msgpack_rx_handler_find_binary(cmp_ctx_t *ctx,char *field_name, char *buffer, uint32_t *buffer_size);
 
-
+bool msgpack_rx_handler_find_boolean(cmp_ctx_t *ctx,char *field_name, bool *data );
 
 bool msgpack_rx_handler_find_array_count(cmp_ctx_t *ctx,char *field_name,uint32_t *count);
 
