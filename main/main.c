@@ -61,6 +61,7 @@
 #include "app_pwm_setup.h"
 #include "app_pulse_setup.h"
 #include "app_analog_main.h"
+#include "modbus_relay_control.h"
 
 
                                 
@@ -108,6 +109,7 @@ void app_main(void)
    initialize_app_pwm_main();
    initialize_app_pulse_main();
    initialize_app_analog_main();
+   initialize_modbus_relay_control();
     while(1)
     {
       
