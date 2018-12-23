@@ -25,8 +25,8 @@ extern discrete_reg_params_t modbus_relay_discrete_reg_params;
 
 
 static void modbus_relay_application_task(void *prt);
-static uint32_t number_of_outputs;
-static uint32_t *relay_output_pins;
+static uint32_t number_of_outputs ;
+static const uint32_t *relay_output_pins;
 
 static CHAIN_FLOW_HANDLE cf;
 
@@ -35,11 +35,12 @@ static void load_chain_flow_data( CHAIN_FLOW_HANDLE *cf );
 
 static void  configure_pins_for_output(void)
 {
+    modbus_relay_coil_reg_params.data_field = 0xffffffff;
     for(int i = 0; i<number_of_outputs; i++)
     {
      gpio_pad_select_gpio(relay_output_pins[i]);
      gpio_set_direction(relay_output_pins[i], GPIO_MODE_OUTPUT);
-        
+     gpio_set_level(relay_output_pins[i],1);   
     }
     
     
@@ -47,14 +48,14 @@ static void  configure_pins_for_output(void)
 
 void modbus_relay_contact_update(void)
 {
-  
-   cf_send_event( &cf,CF_HOST_CONTACT,1 );  
+    printf("host watchdog contact");
+   //cf_send_event( &cf,CF_HOST_CONTACT,1 );  
     
 }
 
 void modbus_relay_reload_irrigation_timer(void)
 {
-    ; // do nothing for now
+    printf("modbus_relay reload irrigation timer \n");
     
 }
 
@@ -73,19 +74,21 @@ void modbus_relay_update_io(void)
 
 void modbus_relay_disable_all(void)
 {
-    memset(&modbus_relay_coil_reg_params,0,sizeof(modbus_relay_coil_reg_params));
+    printf("disable all \n");
+    memset(&modbus_relay_coil_reg_params,0xff,sizeof(modbus_relay_coil_reg_params));
     modbus_relay_holding_reg_params.irrigation_counter = 0;
     modbus_relay_update_io();
 }
 
-void initialize_modbus_relay_application_task(uint32_t number, uint32_t *output_pins)
+void initialize_modbus_relay_application_task(uint32_t number, const uint32_t *output_pins)
 {
     number_of_outputs = number;
     relay_output_pins = output_pins;
     configure_pins_for_output();
+#if 0    
     xTaskCreate( modbus_relay_application_task, "MODBUS_RELAY_APPLICATION_TASK",4000,
                   NULL, 20, NULL );
-    
+#endif    
 }
 
 int modbus_relay_check_irrigation_timer_cf(CHAIN_FLOW_HANDLE *cf, 

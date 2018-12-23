@@ -10,18 +10,12 @@ static bool modbus_relay_find_baud_rate( cmp_ctx_t *ctx, uint32_t *baud_rate);
 static bool  modbus_relay_find_modbus_address( cmp_ctx_t *ctx, uint32_t *modbus_address);
 static bool modbus_relay_find_baud_rtu_flag( cmp_ctx_t *ctx,bool *rtu_flag);
 static bool modbus_relay_find_baud_parity( cmp_ctx_t *ctx, uint32_t *parity);
-static bool modbus_relay_find_outputs( cmp_ctx_t *ctx,
-                                       uint32_t max_output_pins,
-                                       uint32_t *number_of_outputs,
-                                       uint32_t *relay_output_pins);
+
                                   
 bool modbus_relay_read_file_configuration( uint32_t *baud_rate,
                                      uint32_t *modbus_address, 
                                      bool  *rtu_flag,
-                                     uint32_t  *parity,
-                                     uint32_t max_output_pins,
-                                     uint32_t *number_of_outputs,
-                                     uint32_t *relay_output_pins)
+                                     uint32_t  *parity)
                                      
 {
     
@@ -38,23 +32,21 @@ bool modbus_relay_read_file_configuration( uint32_t *baud_rate,
     }
     msgpack_rx_handler_init(&ctx, buffer, buffer_size);
     if( modbus_relay_find_baud_rate(&ctx,baud_rate) == false)
-    {return false;}
+    {goto error;}
     if( modbus_relay_find_modbus_address(&ctx,modbus_address) == false)
-    {return false;}
+    {goto error;}
     if( modbus_relay_find_baud_rtu_flag(&ctx,rtu_flag) == false)
-    {return false;}
+    {goto error;}
     if( modbus_relay_find_baud_parity(&ctx,parity) == false)
-    {return false;}
-    if( modbus_relay_find_outputs(&ctx,
-                                  max_output_pins,
-                                  number_of_outputs,
-                                  relay_output_pins) == false)
-    {return false;}
+    {goto error;}
+
 
     
     free(buffer);
     return true;    
-    
+error:
+    free(buffer);
+    return false;    
 }
 
 static bool modbus_relay_find_baud_rate( cmp_ctx_t *ctx, uint32_t *baud_rate)
@@ -91,17 +83,5 @@ static bool modbus_relay_find_baud_parity( cmp_ctx_t *ctx, uint32_t *parity)
     
 }
                                          
-static bool modbus_relay_find_outputs( cmp_ctx_t *ctx,
-                                       uint32_t max_output_pins,
-                                       uint32_t *number_of_outputs,
-                                       uint32_t *relay_output_pins)
-{
-    if( msgpack_rx_handler_find_array_count(ctx,"OUTPUT_PINS",number_of_outputs) == false)
-    {
-        return false;
-    }    
-    return msgpack_rx_handler_find_array_unsigned(ctx,"OUTPUT_PINS",number_of_outputs,
-                              relay_output_pins);
-    
-}                                       
+                               
                                        

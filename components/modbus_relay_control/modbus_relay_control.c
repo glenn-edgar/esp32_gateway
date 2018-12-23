@@ -8,8 +8,9 @@
 #include "modbus_relay_configuration.h"
 #include "modbus_relay_application.h"
 #include "modbus_relay_control.h"
-#define MAX_OUTPUT 8
+#define MAX_OUTPUT 16
 #define MB_PORT_NUM     (2) 
+#define MB_PAR_INFO_GET_TOUT                (10) // Timeout for get parameter info
 
 extern holding_reg_params_t modbus_relay_holding_reg_params;
 
@@ -20,14 +21,18 @@ extern coil_reg_params_t modbus_relay_coil_reg_params;
 extern discrete_reg_params_t modbus_relay_discrete_reg_params ;
 
 static uint32_t modbus_address;
-static uint32_t number_of_outputs;
-static uint32_t relay_output_pins[ MAX_OUTPUT];
+static const uint32_t number_of_outputs = MAX_OUTPUT;
+static const uint32_t relay_output_pins[ MAX_OUTPUT] = 
+{
+    32,33,25,26,27,14,12,13,
+    19,18,5,17,16,4,0,2
+};
 static uint32_t baud_rate;
 static bool rtu_flag;
 static uint32_t parity; 
 
 
-static  mb_param_info_t reg_info; // keeps the Modbus registers access information
+
 static  mb_communication_info_t comm_info; // Modbus communication parameters
 static  mb_register_area_descriptor_t reg_area; 
 
@@ -40,13 +45,12 @@ void initialize_modbus_relay_control(void)
     if( modbus_relay_read_file_configuration( &baud_rate,
                                         &modbus_address, 
                                         &rtu_flag,
-                                        &parity,
-                                        MAX_OUTPUT,
-                                        &number_of_outputs,
-                                        relay_output_pins) == false)
+                                        &parity ) == false)
     {
+        printf("did not read relay file \n");
         return;
     }
+    printf("baud_rate %d %d %d %d \n",baud_rate,modbus_address,rtu_flag,parity);
     initialize_modbus_hardware();
     initialize_modbus_relay_application_task(number_of_outputs, relay_output_pins);    
     xTaskCreate( modbus_relay_task, "MODBUS_RELAY_TASK",4000,
@@ -71,10 +75,11 @@ static void initialize_modbus_hardware(void)
     {
        comm_info.mode = MB_MODE_ASCII;
     }
+    
     comm_info.slave_addr = modbus_address;
     comm_info.port = MB_PORT_NUM;
     comm_info.baudrate = baud_rate;
-    comm_info.parity = parity;
+    comm_info.parity =parity;
     printf("comm_info setup %d \n",mbcontroller_setup(comm_info));
 
 
@@ -113,44 +118,60 @@ static void initialize_modbus_hardware(void)
 static void modbus_relay_task( void *ptr)
 {
    mb_event_group_t event;
+   mb_param_info_t reg_info; // keeps the Modbus registers access information
+   mbcontroller_start();
    while(1)
    {       
     
         // Check for read/write events of Modbus master for certain events
         event = mbcontroller_check_event((MB_EVENT_HOLDING_REG_WR |MB_EVENT_COILS_WR ));
-
-        // Filter events and process them accordingly
-        if(event & MB_EVENT_HOLDING_REG_WR)  
+        printf("modbus_event %d \n",event);
+        mbcontroller_get_param_info(&reg_info, MB_PAR_INFO_GET_TOUT);
+        if (event & MB_EVENT_COILS_WR) 
         {
-            
 
-            if (reg_info.address == (uint8_t*)&modbus_relay_holding_reg_params.wd_register)
-            {
-                modbus_relay_holding_reg_params.wd_register = 0;
-                modbus_relay_contact_update();
-            }
-            if (reg_info.address == 
-                (uint8_t*)&modbus_relay_holding_reg_params.irrigation_counter)
-            {
-                modbus_relay_reload_irrigation_timer();
-            }
-            if (reg_info.address == 
-                (uint8_t*)&modbus_relay_holding_reg_params.disable_all)
-            {
-                modbus_relay_holding_reg_params.disable_all = 0;
-                modbus_relay_disable_all();
-            }
-        } 
-        if(event & MB_EVENT_HOLDING_REG_WR)
-        {
             modbus_relay_update_io();
         }
-       
+        else if(event & MB_EVENT_HOLDING_REG_WR)  
+        {
+          
+#if 0
+             printf("holding WRITE: time_stamp(us):%u, mb_addr:%u, type:%u, st_address:0x%.4x, size:%u\r\n",
+                                (uint32_t)reg_info.time_stamp,
+                                (uint32_t)reg_info.mb_offset,
+                                (uint32_t)reg_info.type,
+                                (uint32_t)reg_info.address,
+                                (uint32_t)reg_info.size);
+#endif                                
+             if(reg_info.mb_offset == 1)
+             {
+                 modbus_relay_contact_update();
+             } 
+            if(reg_info.mb_offset == 2)
+             {
+                 modbus_relay_reload_irrigation_timer();
+             } 
+             if(reg_info.mb_offset == 3)
+             {
+                 modbus_relay_disable_all();
+             }    
+        } 
+#if 0
+        else if(event & MB_EVENT_HOLDING_REG_RD)  
+        {
+          
 
+             printf("holding RD: time_stamp(us):%u, mb_addr:%u, type:%u, st_address:0x%.4x, size:%u\r\n",
+                                (uint32_t)reg_info.time_stamp,
+                                (uint32_t)reg_info.mb_offset,
+                                (uint32_t)reg_info.type,
+                                (uint32_t)reg_info.address,
+                                (uint32_t)reg_info.size);
+        }
+#endif        
+ 
     }
-    // Destroy of Modbus controller once get maximum value of data_chan0
-    printf("Modbus controller destroyed.");
-    mbcontroller_destroy();
+    
 }
    
   
