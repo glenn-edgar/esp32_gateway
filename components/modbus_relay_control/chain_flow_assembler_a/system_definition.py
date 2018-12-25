@@ -32,16 +32,30 @@ hf.reset("contact_watchdog")
 hf.reset()
 cf.end_chain()
 
+
+cf.define_chain("start_irrigation_timer",True)
+hf.wait_event(  "CF_RESTART_TIMER" )
+hf.reset("irrigation_timer")
+hf.reset()
+cf.end_chain()
+
+cf.define_chain("stop_irrigation_timer",True)
+hf.wait_event(  "CF_TERMINATE_TIMER" )
+hf.disable_chain("irrigation_timer")
+hf.reset()
+cf.end_chain()
+
+
 cf.define_chain("contact_watchdog", True )
-hf.wait_event_count( "CF_MINUTE_TICK",3 )
+hf.wait_event_count( "CF_SECOND_TICK",120 )
 hf.one_step("modbus_relay_disable_irrigation_cf")
 hf.reset()
 cf.end_chain()
 
-cf.define_chain("irrigation_timer", True )
+cf.define_chain("irrigation_timer", False )
 hf.wait("modbus_relay_check_irrigation_timer_cf")
 hf.one_step("modbus_relay_disable_irrigation_cf")
-hf.reset()
+hf.terminate()
 cf.end_chain()
 
 

@@ -12,6 +12,7 @@
 int pat_watch_dog(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,
   unsigned param_2, unsigned param_3, unsigned event, unsigned data)
 {
+   
    wdt_reset_task_time(); 
    return CF_DISABLE;   
 }

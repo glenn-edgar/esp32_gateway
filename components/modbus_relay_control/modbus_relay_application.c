@@ -7,11 +7,10 @@
 #include "driver/gpio.h"
 #include "freertos/task.h"
 #include "cf_events.h"
-
+#include "watchdog.h"
 #include "app_input_functions.h"
 #include "chain_flow_support.h"
-#define CF_HOST_CONTACT CF_APP_EVENT_START +1
-#include "chain_flow_assembler_a/cf_chain_flow_include.h"
+
 #include "modbus_relay_deviceparams.h"
 #include "modbus_relay_application.h"
 
@@ -22,6 +21,9 @@ extern discrete_reg_params_t modbus_relay_discrete_reg_params;
 
 
 #define CF_HOST_CONTACT CF_APP_EVENT_START +1
+#define CF_RESTART_TIMER CF_HOST_CONTACT +1
+#define CF_TERMINATE_TIMER CF_RESTART_TIMER +1
+#include "chain_flow_assembler_a/cf_chain_flow_include.h"
 
 
 static void modbus_relay_application_task(void *prt);
@@ -49,12 +51,13 @@ static void  configure_pins_for_output(void)
 void modbus_relay_contact_update(void)
 {
     printf("host watchdog contact");
-   //cf_send_event( &cf,CF_HOST_CONTACT,1 );  
+    cf_send_event( &cf,CF_HOST_CONTACT,1 );  
     
 }
 
 void modbus_relay_reload_irrigation_timer(void)
 {
+    cf_send_event( &cf,CF_RESTART_TIMER,1 );  
     printf("modbus_relay reload irrigation timer \n");
     
 }
@@ -75,6 +78,7 @@ void modbus_relay_update_io(void)
 void modbus_relay_disable_all(void)
 {
     printf("disable all \n");
+    cf_send_event( &cf,CF_TERMINATE_TIMER,1 );
     memset(&modbus_relay_coil_reg_params,0xff,sizeof(modbus_relay_coil_reg_params));
     modbus_relay_holding_reg_params.irrigation_counter = 0;
     modbus_relay_update_io();
@@ -85,13 +89,15 @@ void initialize_modbus_relay_application_task(uint32_t number, const uint32_t *o
     number_of_outputs = number;
     relay_output_pins = output_pins;
     configure_pins_for_output();
-#if 0    
+    load_chain_flow_data( &cf );
+    initialize_cf_system(&cf);
     xTaskCreate( modbus_relay_application_task, "MODBUS_RELAY_APPLICATION_TASK",4000,
                   NULL, 20, NULL );
-#endif    
+    
 }
 
-int modbus_relay_check_irrigation_timer_cf(CHAIN_FLOW_HANDLE *cf, 
+
+int modbus_relay_disable_irrigation_cf(CHAIN_FLOW_HANDLE *cf, 
                                            unsigned link_id, 
                                            unsigned param_1,
                                            unsigned param_2, 
@@ -105,7 +111,7 @@ int modbus_relay_check_irrigation_timer_cf(CHAIN_FLOW_HANDLE *cf,
       
 }  
 
-int modbus_relay_disable_irrigation_cf(CHAIN_FLOW_HANDLE *cf, 
+int modbus_relay_check_irrigation_timer_cf(CHAIN_FLOW_HANDLE *cf, 
                                        unsigned link_id, unsigned param_1,
                                        unsigned param_2, 
                                        unsigned param_3, 
@@ -146,9 +152,9 @@ static void modbus_relay_application_task(void *prt)
     second_sub_count = 0;
     
     
-    load_chain_flow_data( &cf );
     
     
+  
 
     for(;;)
     {
