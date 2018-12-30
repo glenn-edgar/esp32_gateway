@@ -54,7 +54,7 @@ void initialize_modbus_relay_control(void)
     initialize_modbus_hardware();
     initialize_modbus_relay_application_task(number_of_outputs, relay_output_pins);    
     xTaskCreate( modbus_relay_task, "MODBUS_RELAY_TASK",4000,
-                  NULL, 20, NULL );
+                  NULL, 30, NULL );
     
 }
 
@@ -118,14 +118,15 @@ static void initialize_modbus_hardware(void)
 static void modbus_relay_task( void *ptr)
 {
    mb_event_group_t event;
+ 
    mb_param_info_t reg_info; // keeps the Modbus registers access information
    mbcontroller_start();
    while(1)
    {       
     
         // Check for read/write events of Modbus master for certain events
-        event = mbcontroller_check_event((MB_EVENT_HOLDING_REG_WR |MB_EVENT_COILS_WR ));
-        printf("modbus_event %d \n",event);
+        event = mbcontroller_check_event((MB_EVENT_HOLDING_REG_WR |MB_EVENT_COILS_WR|MB_EVENT_HOLDING_REG_RD ));
+        //printf("modbus_event %d \n",event);
         mbcontroller_get_param_info(&reg_info, MB_PAR_INFO_GET_TOUT);
         if (event & MB_EVENT_COILS_WR) 
         {
@@ -134,7 +135,7 @@ static void modbus_relay_task( void *ptr)
         }
         else if(event & MB_EVENT_HOLDING_REG_WR)  
         {
-          
+             
 #if 0
              printf("holding WRITE: time_stamp(us):%u, mb_addr:%u, type:%u, st_address:0x%.4x, size:%u\r\n",
                                 (uint32_t)reg_info.time_stamp,
@@ -142,21 +143,26 @@ static void modbus_relay_task( void *ptr)
                                 (uint32_t)reg_info.type,
                                 (uint32_t)reg_info.address,
                                 (uint32_t)reg_info.size);
-#endif                                
-             if(reg_info.mb_offset == 1)
-             {
-                 modbus_relay_contact_update();
-             } 
-            if(reg_info.mb_offset == 2)
-             {
-                 modbus_relay_reload_irrigation_timer();
-             } 
-             if(reg_info.mb_offset == 3)
-             {
+#endif      
+             printf("holding WR: %d %d \n",reg_info.mb_offset,reg_info.size); 
+             for( int i = reg_info.mb_offset; i < reg_info.mb_offset + reg_info.size;i++)
+             {    
+                                       
+                if(i == 1)
+                {
+                   modbus_relay_contact_update();
+                } 
+                if(i == 2)
+                {
+                    modbus_relay_reload_irrigation_timer();
+                } 
+                if(i == 3)
+                {
                  modbus_relay_disable_all();
-             }    
+                }  
+             }                
         } 
-#if 0
+#if 1
         else if(event & MB_EVENT_HOLDING_REG_RD)  
         {
           
