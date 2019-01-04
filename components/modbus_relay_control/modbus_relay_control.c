@@ -159,7 +159,11 @@ static void modbus_relay_task( void *ptr)
                 if(i == 3)
                 {
                  modbus_relay_disable_all();
-                }  
+                } 
+                if(i==4)
+                {
+                    abort();
+                }                    
              }                
         } 
 #if 1

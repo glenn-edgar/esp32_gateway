@@ -63,6 +63,9 @@ typedef struct
     uint16_t wd_register;
     uint16_t irrigation_counter;
     uint16_t disable_all;
+    uint16_t reset_register;
+    uint16_t wd_register_rd;
+    uint16_t irrigation_counter_rd;
 
 } holding_reg_params_t;
 #pragma pack(pop)

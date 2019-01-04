@@ -51,6 +51,7 @@ static void  configure_pins_for_output(void)
 void modbus_relay_contact_update(void)
 {
     modbus_relay_holding_reg_params.wd_register =0;
+    modbus_relay_holding_reg_params.wd_register_rd =0;
     printf("host watchdog contact \n");
     cf_send_event( &cf,CF_HOST_CONTACT,1 );  
     
@@ -126,10 +127,11 @@ int modbus_relay_check_irrigation_timer_cf(CHAIN_FLOW_HANDLE *cf,
     }
     if(modbus_relay_holding_reg_params.irrigation_counter == 0 )
     {
+        modbus_relay_holding_reg_params.irrigation_counter_rd = 0;
         return 1;
     }
     modbus_relay_holding_reg_params.irrigation_counter -= 1;
-    
+    modbus_relay_holding_reg_params.irrigation_counter_rd = modbus_relay_holding_reg_params.irrigation_counter;
     if(modbus_relay_holding_reg_params.irrigation_counter == 0 )
     {
         return 1;
