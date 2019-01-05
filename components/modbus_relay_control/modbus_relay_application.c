@@ -94,7 +94,7 @@ void initialize_modbus_relay_application_task(uint32_t number, const uint32_t *o
     load_chain_flow_data( &cf );
     initialize_cf_system(&cf);
     xTaskCreate( modbus_relay_application_task, "MODBUS_RELAY_APPLICATION_TASK",4000,
-                  NULL, 20, NULL );
+                  NULL, 10, NULL );
     
 }
 
@@ -174,9 +174,9 @@ static void modbus_relay_application_task(void *prt)
              }
            
         }
-        vTaskDelay(10/ portTICK_PERIOD_MS); 
+        vTaskDelay(100/ portTICK_PERIOD_MS); 
         cf_send_event( &cf,CF_TIME_TICK_EVENT, 10 );
-        second_sub_count += 10;
+        second_sub_count += 100;
         if(second_sub_count >= 1000)
         {
           second_sub_count = 0;

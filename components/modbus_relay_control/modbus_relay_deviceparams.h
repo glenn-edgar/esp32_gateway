@@ -59,7 +59,7 @@ typedef struct
 #pragma pack(push, 1)
 typedef struct
 {
-    // Parameter: Data channel 0 : DataChan0
+    uint16_t dummy;
     uint16_t wd_register;
     uint16_t irrigation_counter;
     uint16_t disable_all;

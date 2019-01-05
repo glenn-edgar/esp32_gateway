@@ -28,6 +28,8 @@ cf.end_chain()
 
 cf.define_chain("contact_input", True )
 hf.wait_event(  "CF_HOST_CONTACT" )
+
+hf.disable_chain("contact_watchdog")
 hf.enable_chain("contact_watchdog")
 hf.reset()
 cf.end_chain()
@@ -35,6 +37,7 @@ cf.end_chain()
 
 cf.define_chain("start_irrigation_timer",True)
 hf.wait_event(  "CF_RESTART_TIMER" )
+hf.disable_chain("irrigation_timer")
 hf.enable_chain("irrigation_timer")
 hf.reset()
 cf.end_chain()
@@ -47,7 +50,9 @@ cf.end_chain()
 
 
 cf.define_chain("contact_watchdog", True )
+
 hf.wait_event_count( "CF_SECOND_TICK",120 )
+
 hf.one_step("modbus_relay_disable_irrigation_cf")
 hf.reset()
 cf.end_chain()
