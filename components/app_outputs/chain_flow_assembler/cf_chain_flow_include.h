@@ -1,5 +1,5 @@
 /*
-** Build Time: 2018-10-03 17:05:58.409456  
+** Build Time: 2019-01-23 12:30:42.778487  
 */
 #ifndef _CF_ASSEMBLER_H_
 #define _CF_ASSEMBLER_H_
@@ -25,7 +25,7 @@ static LINK_CELL CHAIN_initialization_LINKS[]=
 {
 { one_step_fn,(CF_FUN_AUX)analog_output_store_cf_handle_ref,(unsigned)0,(unsigned)0,(unsigned)0},
 { one_step_fn,(CF_FUN_AUX)analog_output_subscribe_configuration,(unsigned)0,(unsigned)0,(unsigned)0},
-{ one_step_fn,(CF_FUN_AUX)analog_ouptut_subscribe_output,(unsigned)0,(unsigned)0,(unsigned)0},
+{ one_step_fn,(CF_FUN_AUX)analog_output_subscribe_output,(unsigned)0,(unsigned)0,(unsigned)0},
 { one_step_fn,(CF_FUN_AUX)analog_output_subscribe_pulse_output,(unsigned)0,(unsigned)0,(unsigned)0},
 { one_step_fn,(CF_FUN_AUX)add_watch_dog,(unsigned)0,(unsigned)0,(unsigned)0},
 { wait_condition_fn,(CF_FUN_AUX)wait_for_mqtt_connect,(unsigned)0,(unsigned)0,(unsigned)0},

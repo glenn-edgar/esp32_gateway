@@ -14,7 +14,7 @@
 bool app_input_file_read_configuration( uint32_t *input_number, uint32_t **pins,DEBOUNCE_CTRL **debounce_ctrl )
 {
     
-    
+    bool return_value;
    
     char     *buffer;
     uint32_t buffer_size = 1000;
@@ -27,10 +27,10 @@ bool app_input_file_read_configuration( uint32_t *input_number, uint32_t **pins,
          return false;
     }
    
-    app_input_read_setup( buffer_size, buffer, input_number, pins, debounce_ctrl );
+    return_value = app_input_read_setup( buffer_size, buffer, input_number, pins, debounce_ctrl );
     free(buffer);
     
-    return false;    
+    return return_value;    
     
 }
 

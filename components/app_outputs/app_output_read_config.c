@@ -3,9 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <esp_types.h>
+#include "mqtt_client.h"
+#include "mqtt_ctrl.h"
+#include "mqtt_ctrl_subscription.h"
 #include "debounce_ctrl.h"
 #include "gpio.h"
 #include "msgpack_rx_handler.h"
+#include "msg_dict_stream.h"
 #include "app_output_read_config.h"
 
 static uint32_t      pin_count;
@@ -13,6 +17,7 @@ static uint32_t    int_value_count;
 
 static uint32_t *pin_array;
 static uint32_t *int_value_array;
+
 
 static bool action_pins_in_ref( int test_pin )
 {
@@ -126,7 +131,8 @@ bool  app_output_find_set_configuration( uint32_t data_len, char *data)
           
           goto exit;
       }
- 
+      
+            
       for(int i=0;i<pin_count;i++)    
       {
 
@@ -149,41 +155,48 @@ exit:
     
 }
 
+
+
+    
+
+
+
+
 bool  app_output_find_set_data( uint32_t data_len, char *data)
 {   
     uint32_t      pin_count;
-    uint32_t    int_value_count;
+    uint32_t    value_count;
 
     uint32_t *pin_array;
-    uint32_t *int_value_array;
+    uint32_t *value_array;
    
     cmp_ctx_t ctx;
     uint32_t *pin_ptr;
-    uint32_t *int_value_ptr;
+    uint32_t *value_ptr;
      //printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
      msgpack_rx_handler_init(&ctx, data, data_len);
      if( msgpack_rx_handler_find_array_count(&ctx,"pins",&pin_count) != true )
     {
         goto exit;
     }
-    if( msgpack_rx_handler_find_array_count(&ctx,"init_values",&int_value_count) != true )
+    if( msgpack_rx_handler_find_array_count(&ctx,"values",&value_count) != true )
     {
          goto exit;
     }
-    if( int_value_count != pin_count )
+    if( value_count != pin_count )
     {
          goto exit;
     }
-    
+    //printf("counts %d %d \n",value_count,pin_count);
     if(pin_count >0 )
     {
       
       pin_array = malloc(pin_count*sizeof(uint32_t));
-      int_value_array = malloc(pin_count *sizeof(uint32_t));
+      value_array = malloc(pin_count *sizeof(uint32_t));
 
       
       pin_ptr = pin_array;
-      int_value_ptr = int_value_array;
+      value_ptr = int_value_array;
       if( msgpack_rx_handler_find_array_unsigned(&ctx,"pins",&pin_count,pin_array) != true )
       {
            free(pin_array);
@@ -191,7 +204,7 @@ bool  app_output_find_set_data( uint32_t data_len, char *data)
 
            goto exit;
       }
-      if( msgpack_rx_handler_find_array_unsigned(&ctx,"init_values",&int_value_count,int_value_array) != true )
+      if( msgpack_rx_handler_find_array_unsigned(&ctx,"values",&int_value_count,int_value_array) != true )
       {
           free(pin_array);
           free(int_value_array);
@@ -199,19 +212,26 @@ bool  app_output_find_set_data( uint32_t data_len, char *data)
           goto exit;
       }
       //printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ \n");
-      if( verifiy_output_pins(pin_count,pin_array) == false){return false;}
+      if( verifiy_output_pins(pin_count,pin_array) == false)     
+      {
+          free(pin_array);
+          free(int_value_array);
+          
+          goto exit;
+      }
       //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
       for(int i=0;i<pin_count;i++)    
       {
 
           //printf("############################ pin %d \n",*pin_ptr);
-          //printf("############################ pin %d \n",*int_value_ptr);
-           gpio_set_value(*pin_ptr, *int_value_ptr);
-           pin_ptr++;
-           int_value_ptr++;
+          //printf("############################ pin %d \n",*value_ptr);
+          gpio_set_value(*pin_ptr, *value_ptr);
+          pin_ptr++;
+          value_ptr++;
            
       }
-      free(int_value_array);
+      free(value_array);
+      free(pin_array);
       //printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
       return true;
      

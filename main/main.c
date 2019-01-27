@@ -62,6 +62,7 @@
 #include "app_pulse_setup.h"
 #include "app_analog_main.h"
 #include "modbus_relay_control.h"
+#include "mqtt_current_main.h"
 
 
                                 
@@ -110,6 +111,7 @@ void app_main(void)
    initialize_app_pulse_main();
    initialize_app_analog_main();
    initialize_modbus_relay_control();
+   initialize_mqtt_current_main();
     while(1)
     {
       

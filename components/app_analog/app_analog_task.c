@@ -42,6 +42,11 @@ static void compute_moving_averages( uint32_t channel );
 static void start_timer_interrupt(void);
 
 
+float *app_analog_get_analog_channels(void)
+{
+    return ma_dc_avg;
+    
+}
 
 
 

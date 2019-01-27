@@ -40,6 +40,7 @@ static void app_ouput_set_pin_data(esp_mqtt_client_handle_t mqtt_client,
                                 char *topic, 
                                 uint32_t data_len, 
                                 char *data  );
+
 #if 0                               
 static void app_ouput_configure_pin_data(esp_mqtt_client_handle_t mqtt_client,
                                 uint32_t topic_len,
@@ -68,14 +69,13 @@ int analog_output_subscribe_configuration(CHAIN_FLOW_HANDLE *cf, unsigned link_i
 }
 
 
-int analog_ouptut_subscribe_output(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,
+int analog_output_subscribe_output(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,
   unsigned param_2, unsigned param_3, unsigned event, unsigned data)
 {
-   //printf("subscribe   555555555555 \n");
+   
    mqtt_ctrl_register_subscription("OUTPUTS/GPIO/SET", app_ouput_set_pin_data );
    return CF_DISABLE;      
 }
-
 
 
 
@@ -196,7 +196,7 @@ static void app_ouput_set_pin_data(esp_mqtt_client_handle_t mqtt_client,
                                 char *data  )
 {
  
-  //printf("sub received $$$$$$$$$$$$$$$$$ data len %d \n",data_len);
+  printf("sub received $$$$$$$$$$$$$$$$$ data len %d \n",data_len);
   app_output_find_set_data( data_len, data);
 
     
