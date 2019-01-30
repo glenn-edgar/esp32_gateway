@@ -133,12 +133,13 @@ int mqtt_current_monitor_equipment_relay(CHAIN_FLOW_HANDLE *cf, unsigned link_id
     int pack_buffer_size;
 
     float *average_currents;
-
+    
     average_currents = app_analog_get_analog_channels(); 
     if(average_currents[EQUIPMENT_CHANNEL] > max_equipment_current)
     {
         max_equipment_current = average_currents[EQUIPMENT_CHANNEL];
     }
+    
     if( average_currents[EQUIPMENT_CHANNEL] > mqtt_current_get_equipment_level())
     {
         mqtt_relay_set_equipment_off();
@@ -174,12 +175,13 @@ int mqtt_current_monitor_irrigation_relay(CHAIN_FLOW_HANDLE *cf, unsigned link_i
     int pack_buffer_size;
 
     float *average_currents;
-
+   
     average_currents = app_analog_get_analog_channels(); 
     if(average_currents[IRRIGATION_CHANNEL] > max_irrigation_current)
     {
         max_irrigation_current = average_currents[IRRIGATION_CHANNEL];
     }
+    
     if( average_currents[IRRIGATION_CHANNEL] > mqtt_current_get_irrigation_level())
     {
         mqtt_relay_set_irrigation_off();

@@ -28,7 +28,7 @@ void initialize_mqtt_current_main(void)
        if( mqtt_current_file_read_configuration(&max_current_equipment, &max_current_irrigation) == true)
        {
           mqtt_current_store_voltage_limits( max_current_equipment, max_current_irrigation);
-          xTaskCreate( mqtt_current_task, "MQTT_CURRENT_TASK",4000, NULL, 20, &xHandle );
+          xTaskCreate( mqtt_current_task, "MQTT_CURRENT_TASK",12000, NULL, 20, &xHandle );
           configASSERT( xHandle );
        }
  
@@ -59,7 +59,7 @@ static void mqtt_current_task( void * pvParameters )
     load_chain_flow_data( &cf );
     
     initialize_cf_system(&cf);
-
+    
     for(;;)
     {
         while( cf_event_number(&cf) != 0)
@@ -82,6 +82,7 @@ static void mqtt_current_task( void * pvParameters )
            }
         }
         vTaskDelay(10/ portTICK_PERIOD_MS); 
+   
         cf_send_event( &cf,CF_TIME_TICK_EVENT, 10 );
         second_sub_count += 10;
         if(second_sub_count >= 1000)

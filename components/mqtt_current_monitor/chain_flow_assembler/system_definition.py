@@ -33,14 +33,15 @@ cf.end_chain()
 
 #These chains are for actions every second 
 cf.define_chain("equipment_relay_monitor", False )
-hf.wait_event("CF_SECOND_TICK")
+hf.wait_event_count("CF_SECOND_TICK",10)
 hf.one_step("mqtt_current_monitor_equipment_relay")
 hf.reset()
 cf.end_chain()
 
 #These chains are for actions every second 
 cf.define_chain("irrigation_relay_monitor", False )
-hf.wait_event("CF_SECOND_TICK")
+hf.wait_event_count("CF_SECOND_TICK",10)
+
 hf.one_step("mqtt_current_monitor_irrigation_relay")
 hf.reset()
 cf.end_chain()

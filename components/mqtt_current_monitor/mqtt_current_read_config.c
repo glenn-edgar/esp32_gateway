@@ -23,7 +23,7 @@ bool mqtt_current_file_read_configuration( float *max_current_equipment, float *
     
     if( msgpack_rx_handler_file(&ctx,"/spiffs/MQTT_CUR.MPK",  &buffer,&buffer_size ) != true)
     {
-         printf("############## cannot read file \n");
+         //printf("############## cannot read file /spiffs/MQTT_CUR.MPK \n");
          return false;
     }
    
@@ -41,14 +41,17 @@ static bool mqtt_current_read_setup( float *max_current_equipment, float *max_cu
     cmp_ctx_t ctx;
    
     msgpack_rx_handler_init(&ctx, data, data_len);
-    if( msgpack_rx_handler_find_float(&ctx,"max_current_equipment", max_current_equipment )!= true)
+    if( msgpack_rx_handler_find_float(&ctx,"max_current_equipment",max_current_equipment )!= true)
     {
          goto exit;
     }
+    //printf("max current equipment %f \n",*max_current_equipment);
    if( msgpack_rx_handler_find_float(&ctx,"max_current_irrigation", max_current_irrigation )!= true)
     {
         goto exit;
     }
+    //printf("max_current_irrigation %f \n",*max_current_irrigation);
+    return true;
 
 
 exit:

@@ -98,11 +98,12 @@ void app_main(void)
 #endif
  
 
-    
+ 
     initialize_watchdog(20, true);
     wdt_task_subscribe();
-    
+   
    initialize_serial_heart_beat();
+
    initialize_mqtt_client_handler();
 
    initialize_app_input_main(); 
@@ -112,6 +113,7 @@ void app_main(void)
    initialize_app_analog_main();
    initialize_modbus_relay_control();
    initialize_mqtt_current_main();
+
     while(1)
     {
       

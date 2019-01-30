@@ -1,5 +1,5 @@
 /*
-** Build Time: 2019-01-25 13:13:19.289130  
+** Build Time: 2019-01-29 17:17:15.214411  
 */
 #ifndef _CF_ASSEMBLER_H_
 #define _CF_ASSEMBLER_H_
@@ -40,13 +40,13 @@ static LINK_CELL CHAIN_feed_watch_dog_LINKS[]=
 };
 static LINK_CELL CHAIN_equipment_relay_monitor_LINKS[]= 
 {
-{ wait_event_fn,(CF_FUN_AUX)NULL,(unsigned)CF_SECOND_TICK,(unsigned)0,(unsigned)0},
+{ wait_event_count_fn,(CF_FUN_AUX)NULL,(unsigned)CF_SECOND_TICK,(unsigned)10,(unsigned)0},
 { one_step_fn,(CF_FUN_AUX)mqtt_current_monitor_equipment_relay,(unsigned)0,(unsigned)0,(unsigned)0},
 { reset_fn,(CF_FUN_AUX)NULL,(unsigned)0,(unsigned)0,(unsigned)0},
 };
 static LINK_CELL CHAIN_irrigation_relay_monitor_LINKS[]= 
 {
-{ wait_event_fn,(CF_FUN_AUX)NULL,(unsigned)CF_SECOND_TICK,(unsigned)0,(unsigned)0},
+{ wait_event_count_fn,(CF_FUN_AUX)NULL,(unsigned)CF_SECOND_TICK,(unsigned)10,(unsigned)0},
 { one_step_fn,(CF_FUN_AUX)mqtt_current_monitor_irrigation_relay,(unsigned)0,(unsigned)0,(unsigned)0},
 { reset_fn,(CF_FUN_AUX)NULL,(unsigned)0,(unsigned)0,(unsigned)0},
 };
