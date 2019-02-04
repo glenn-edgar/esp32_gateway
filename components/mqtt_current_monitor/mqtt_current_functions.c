@@ -72,6 +72,13 @@ static void read_relay_states(esp_mqtt_client_handle_t mqtt_client,
                                 char *data  );
                                 
 
+int setup_gpio_relay(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,
+  unsigned param_2, unsigned param_3, unsigned event, unsigned data)
+{
+    mqtt_relay_power_initialize();
+    return CF_DISABLE;
+}  
+                                
 int mqtt_current_register_subscriptions(CHAIN_FLOW_HANDLE *cf, unsigned link_id, unsigned param_1,
   unsigned param_2, unsigned param_3, unsigned event, unsigned data)
 {
@@ -131,18 +138,20 @@ int mqtt_current_monitor_equipment_relay(CHAIN_FLOW_HANDLE *cf, unsigned link_id
     MSG_PACK_ELEMENT msg_pack[5];
     char *pack_buffer;
     int pack_buffer_size;
-
+    bool equipment_state_value;
+    bool irrigation_state_value;
     float *average_currents;
     
     average_currents = app_analog_get_analog_channels(); 
+    mqtt_current_get_relay_states( &equipment_state_value, &irrigation_state_value);
     if(average_currents[EQUIPMENT_CHANNEL] > max_equipment_current)
     {
         max_equipment_current = average_currents[EQUIPMENT_CHANNEL];
     }
     
-    if( average_currents[EQUIPMENT_CHANNEL] > mqtt_current_get_equipment_level())
+    if( (average_currents[EQUIPMENT_CHANNEL] > mqtt_current_get_equipment_level()) && (equipment_state_value == true ))
     {
-        mqtt_relay_set_equipment_off();
+        mqtt_relay_set_equipment_inactive();
         msg_dict_pack_string(&msg_pack[0],"TOPIC","OUTPUT/MQTT_CURRENT/EQUIPMENT_RELAY_TRIP");      
         msg_dict_pack_float(&msg_pack[1],"CURRENT_VALUE",average_currents[EQUIPMENT_CHANNEL] );
         msg_dict_pack_float(&msg_pack[2],"LIMIT_VALUE",mqtt_current_get_equipment_level());
@@ -173,18 +182,20 @@ int mqtt_current_monitor_irrigation_relay(CHAIN_FLOW_HANDLE *cf, unsigned link_i
     MSG_PACK_ELEMENT msg_pack[5];
     char *pack_buffer;
     int pack_buffer_size;
-
+    bool equipment_state_value;
+    bool irrigation_state_value;
+ 
     float *average_currents;
-   
+    mqtt_current_get_relay_states( &equipment_state_value, &irrigation_state_value);
     average_currents = app_analog_get_analog_channels(); 
     if(average_currents[IRRIGATION_CHANNEL] > max_irrigation_current)
     {
         max_irrigation_current = average_currents[IRRIGATION_CHANNEL];
     }
     
-    if( average_currents[IRRIGATION_CHANNEL] > mqtt_current_get_irrigation_level())
+    if( (average_currents[IRRIGATION_CHANNEL] > mqtt_current_get_irrigation_level()) &&( irrigation_state_value == true ))
     {
-        mqtt_relay_set_irrigation_off();
+        mqtt_relay_set_irrigation_inactive();
         msg_dict_pack_string(&msg_pack[0],"TOPIC","OUTPUT/MQTT_CURRENT/IRRIGATION_RELAY_TRIP");      
         msg_dict_pack_float(&msg_pack[1],"CURRENT_VALUE",average_currents[IRRIGATION_CHANNEL] );
         msg_dict_pack_float(&msg_pack[2],"LIMIT_VALUE",mqtt_current_get_irrigation_level());
@@ -254,8 +265,8 @@ static void read_currents(esp_mqtt_client_handle_t mqtt_client,
 
    average_currents = app_analog_get_analog_channels();   
    msg_dict_pack_string(&msg_pack[0],"TOPIC","INPUT/MQTT_CURRENT/CURRENTS");      
-   msg_dict_pack_float(&msg_pack[1],"MAX_EQUIPMENT_CURRENT", average_currents[EQUIPMENT_CHANNEL] );
-   msg_dict_pack_float(&msg_pack[2],"MAX_IRRIGATION_CURRENT", average_currents[IRRIGATION_CHANNEL]);
+   msg_dict_pack_float(&msg_pack[1],"EQUIPMENT_CURRENT", average_currents[EQUIPMENT_CHANNEL] );
+   msg_dict_pack_float(&msg_pack[2],"IRRIGATION_CURRENT", average_currents[IRRIGATION_CHANNEL]);
    pack_buffer = msg_dict_stream( &pack_buffer_size,3,msg_pack);
    mqtt_clt_publish("INPUT/MQTT_CURRENT/CURRENTS", pack_buffer,pack_buffer_size );
    free(pack_buffer);
@@ -271,7 +282,7 @@ static void enable_equipment_relay(esp_mqtt_client_handle_t mqtt_client,
                                
 {
     
-     mqtt_relay_set_equipment_on();
+     mqtt_relay_set_equipment_active();
     
 }
                                 
@@ -283,7 +294,7 @@ static void enable_irrigation_relay(esp_mqtt_client_handle_t mqtt_client,
                                                 
 {
     
-    mqtt_relay_set_irrigation_on(  );
+    mqtt_relay_set_irrigation_active(  );
     
 }
                                 
@@ -296,7 +307,7 @@ static void disable_equipment_relay(esp_mqtt_client_handle_t mqtt_client,
 {
     
    
-   mqtt_relay_set_equipment_off( );
+   mqtt_relay_set_equipment_inactive( );
 
 
 
@@ -311,7 +322,7 @@ static void disable_irrigation_relay (esp_mqtt_client_handle_t mqtt_client,
                                                
 {
     
-    mqtt_relay_set_irrigation_off();
+    mqtt_relay_set_irrigation_inactive();
     
 }
                                 

@@ -15,15 +15,15 @@ void mqtt_current_get_relay_states( bool *equipment_state_value, bool *irrigatio
 void mqtt_relay_power_initialize(void);
 
 
-void mqtt_relay_set_equipment_on( void );
+void mqtt_relay_set_equipment_active( void );
 
-void mqtt_relay_set_equipment_off( void );
-
-
-void mqtt_relay_set_irrigation_on( void );
+void mqtt_relay_set_equipment_inactive( void );
 
 
-void mqtt_relay_set_irrigation_off( void );
+void mqtt_relay_set_irrigation_active( void );
+
+
+void mqtt_relay_set_irrigation_inactive( void );
 
 
 
