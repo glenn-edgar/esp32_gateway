@@ -7,8 +7,8 @@
 #include "gpio.h"
 #include "mqtt_current_relay_power_control.h"
 
-#define EQUIPMENT_PIN  19
-#define IRRIGATION_PIN 18
+#define EQUIPMENT_PIN  17
+#define IRRIGATION_PIN 16
 /*
    explanation Relays are normally open
    When active the relay is off and the GPIO pin is pulled high
@@ -21,8 +21,8 @@
 
 static float equipment_limit_value;
 static float irrigation_limit_value;
-static bool  irrigation_state;
-static bool  equipment_state;
+static bool  irrigation_state = true;
+static bool  equipment_state =true;
 
 float mqtt_current_get_equipment_level(void)
 {

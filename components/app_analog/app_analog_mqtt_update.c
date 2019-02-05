@@ -68,7 +68,7 @@ static void mqtt_packaging_queue(void *arg)
         }
         
         buffer =  msg_dict_stream( &buffer_size, pack_index, msg_pack);
-        mqtt_clt_publish("INPUT/AD1/VALUE", buffer,buffer_size );
+        mqtt_clt_publish("INPUT/AD1/VALUE/RESPONSE", buffer,buffer_size );
         free(buffer);
   
     }
