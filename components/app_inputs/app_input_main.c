@@ -22,7 +22,7 @@ void initialize_app_input_main(void)
 {
        if( app_input_input_data_read() == true)
        {
-          xTaskCreate( app_input_task, "APP_INPUT_TASK",4000, NULL, 20, &xHandle );
+          xTaskCreate( app_input_task, "APP_INPUT_TASK",8000, NULL, 20, &xHandle );
           configASSERT( xHandle );
        }
  
