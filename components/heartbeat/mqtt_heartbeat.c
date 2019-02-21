@@ -22,7 +22,7 @@ static void mqtt_heartbeat_task( void * pvParameters );
 void initialize_mqtt_heart_beat(void)
 {
     init_status_interface();
-    xTaskCreate( mqtt_heartbeat_task, "MQTT_HEART_BEAT",2000, NULL, 10, &xHandle );
+    xTaskCreate( mqtt_heartbeat_task, "MQTT_HEART_BEAT",8000, NULL, 10, &xHandle );
     
 }
 
